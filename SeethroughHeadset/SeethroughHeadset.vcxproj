@@ -1,0 +1,127 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{FDB20C2D-2A51-4942-AAAD-DB20279797F3}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>SeethroughHeadset</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>E:\opencv\build\include;E:\opencv\build\include\opencv2;$(ProjectDir)external\DevIL-1.7.8\include\IL;$(ProjectDir)external\freeglut-2.8.1\include\GL;$(ProjectDir)external\glew-1.10.0\include\GL;$(ProjectDir)external\glm-0.9.4.6\glm;$(ProjectDir)external\assimp-3.0.1270\include;E:\OculusSDK\LibOVR\Include</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>E:\opencv\build\x86\vc11\lib;$(ProjectDir)external\DevIL-1.7.8\lib;$(ProjectDir)external\freeglut-2.8.1\lib;$(ProjectDir)external\glew-1.10.0\lib\Release\Win32;$(ProjectDir)external\assimp-3.0.1270\lib\assimp_release-dll_win32;E:\OculusSDK\LibOVR\Lib\Win32</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opencv_core248d.lib;opencv_highgui248d.lib;DevIL.lib;ILU.lib;ILUT.lib;freeglut.lib;glew32.lib;glew32s.lib;assimp.lib;libovrd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>E:\opencv\build\include;E:\opencv\build\include\opencv2;$(ProjectDir)external\DevIL-1.7.8\include\IL;$(ProjectDir)external\freeglut-2.8.1\include\GL;$(ProjectDir)external\glew-1.10.0\include\GL;$(ProjectDir)external\glm-0.9.4.6\glm;$(ProjectDir)external\assimp-3.0.1270\include;E:\OculusSDK\LibOVR\Include</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>E:\opencv\build\x86\vc11\lib;$(ProjectDir)external\DevIL-1.7.8\lib;$(ProjectDir)external\freeglut-2.8.1\lib;$(ProjectDir)external\glew-1.10.0\lib\Release\Win32;$(ProjectDir)external\assimp-3.0.1270\lib\assimp_release-dll_win32;E:\OculusSDK\LibOVR\Lib\Win32</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opencv_core248.lib;opencv_highgui248.lib;DevIL.lib;ILU.lib;ILUT.lib;freeglut.lib;glew32.lib;glew32s.lib;assimp.lib;libovr.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="GLSLProgram.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="material.cpp" />
+    <ClCompile Include="renderer.cpp" />
+    <ClCompile Include="riftManager.cpp" />
+    <ClCompile Include="virtualEntity.cpp" />
+    <ClCompile Include="entityNode.cpp" />
+    <ClCompile Include="mesh.cpp" />
+    <ClCompile Include="contentLoader.cpp" />
+    <ClCompile Include="camManager.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GLSLProgram.h" />
+    <ClInclude Include="includes.h" />
+    <ClInclude Include="material.h" />
+    <ClInclude Include="renderer.h" />
+    <ClInclude Include="riftManager.h" />
+    <ClInclude Include="virtualEntity.h" />
+    <ClInclude Include="entityNode.h" />
+    <ClInclude Include="mesh.h" />
+    <ClInclude Include="contentLoader.h" />
+    <ClInclude Include="camManager.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shader\blend.frag" />
+    <None Include="shader\depthMap.frag" />
+    <None Include="shader\depthMap.vert" />
+    <None Include="shader\drawTexture.frag" />
+    <None Include="shader\gauss.frag" />
+    <None Include="shader\gaussX.vert" />
+    <None Include="shader\gaussY.vert" />
+    <None Include="shader\glow.frag" />
+    <None Include="shader\glow.vert" />
+    <None Include="shader\passthrough.vert" />
+    <None Include="shader\phong.frag" />
+    <None Include="shader\phong.vert" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
