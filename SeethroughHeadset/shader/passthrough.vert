@@ -1,7 +1,7 @@
 #version 330 core
 
 in  vec4 position;
-in	vec2 textureCoord;
+//in	vec2 textureCoord;
 out vec2 _textureCoord;
 
 //uniform int lr;

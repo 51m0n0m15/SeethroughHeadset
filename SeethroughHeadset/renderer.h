@@ -8,48 +8,33 @@ Texture unit convention:
 */
 
 #include "virtualEntity.h"
+#include "entityInstance.h"
 #include "includes.h"
 #include "GLSLProgram.h"
-#include "contentLoader.h"
 #include "camManager.h"
 #include "riftManager.h"
 
 
-enum RenderPass{PHONG,
-				GLOW
-};
 
 class Renderer
 {
 public:
-	Renderer(GLuint w, GLuint h);
-	void setScene(VirtualEntity *_scene);
+	Renderer();
 	void setRiftManager(RiftManager *_riftManager){riftManager = _riftManager;}
 	void setCamManager(CamManager *_camManager){camManager = _camManager;}
-	void init();	//must be called after setScene()
-	void render();
-	void switchCams(){camManager->switchCams();}
+	void init(vector<VirtualEntity*> *entities);	//must be called after setScene()
+	void render(vector<EntityInstance*> *entities);
 	~Renderer(void);
 
 private:
 	////////////MEMBERS
-	
-	VirtualEntity *scene;
 	CamManager *camManager;
 	RiftManager *riftManager;
-
-	bool glowEnabled;
-
-	//render target sizes
-	GLuint stdWidth, stdHeight, glowWidth, glowHeight;
 	
 	//shaders
 	GLSLProgram phong;
-	GLSLProgram glow;
-	GLSLProgram blend;
-	GLSLProgram gaussX;
-	GLSLProgram gaussY;
 	GLSLProgram drawTexture;
+	GLSLProgram warp;
 
 	// Locations
 	GLint vertexLoc, normalLoc, outputFLoc, texCoordLoc;
@@ -80,17 +65,13 @@ private:
 	void setupFBO(GLuint w, GLuint h, int index, bool color, bool depth, bool stenc);
 
 	//rendering
-	void recursiveRendering(EntityNode *parent, mat4 transform, RenderPass pass);
-	
-	//methods called by recursiveRendering():
+	void recursiveRendering(EntityNode *parent, mat4 transform);
 	void phongPass(Mesh *m, mat4 transform);		//standard rendering
-	void glowPass(Mesh *m, mat4 transform);		//for glow effect
 
 	//for rendering texture to screen
 	void setupQuad();
 	void renderTextureQuad(GLuint tex);
 	void makeCamTextures(Mat *left, Mat *right);
-	//void render2TexturesQuad(GLuint tex1, GLuint tex2, GLSLProgram *p);
 
 	
 };

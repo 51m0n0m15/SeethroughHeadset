@@ -1,12 +1,11 @@
 #pragma once
 
 #include "includes.h"
+#include "entityNode.h"
+#include "material.h"
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include "GLSLProgram.h"
-#include "mesh.h"
-#include "entityNode.h"
 
 class VirtualEntity
 {
@@ -15,22 +14,13 @@ private:
 
 	vector<Material*> *materials;
 
-	void loadGeometry(char* source);
+	void loadGeometry(const char* source);
 	void recursiveSceneLoad(EntityNode *parent, aiNode *aiParent);
 
 public:
-	VirtualEntity(char *path);
-
-	//viewport
-	int width, height;
+	VirtualEntity(const char *path);
 
 	EntityNode *root;
-
-	float glowSize;
-	
-
-	//Resize Window
-	void resize(int, int);
 	
 	//animations
 	void update(double elapsed);

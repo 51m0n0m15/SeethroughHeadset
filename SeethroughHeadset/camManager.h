@@ -12,12 +12,14 @@ public:
 	void open();
 	void refresh();
 	void switchCams();
-	void setResolution(int width, int height){capWidth = width; capHeight = height;}
+	void toggleCamOn(){camOn=!camOn;}
+	bool camIsOn(){return camOn;}
 	Mat* getFrameL(){return frameL;}
 	Mat* getFrameR(){return frameR;}
 
 private:
-	int capWidth, capHeight;
+	bool camOn;
+	bool leftConnected, rightConnected;
 
 	VideoCapture *capL;
 	VideoCapture *capR;

@@ -1,12 +1,9 @@
 #include "virtualEntity.h"
-#include "contentLoader.h"
+#include "mesh.h"
 
-#include <cstdio>
-#include <cstdlib>
 
-VirtualEntity::VirtualEntity(char *path){ 
+VirtualEntity::VirtualEntity(const char *path){ 
 
-	glowSize = 1.0f/200.0f;
 
 	//Load Content!
 	loadGeometry(path);
@@ -18,7 +15,7 @@ VirtualEntity::~VirtualEntity(){
 }
 
 
-void VirtualEntity::loadGeometry(char* source){
+void VirtualEntity::loadGeometry(const char* source){
 	Assimp::Importer importer;
 	assimpScene = importer.ReadFile(source, aiProcessPreset_TargetRealtime_Fast);
 
@@ -102,12 +99,6 @@ void VirtualEntity::recursiveSceneLoad(EntityNode *parent, aiNode *aiParent){
 	}
 }
 
-
-
-void VirtualEntity::resize(int w, int h)
-{
-//todo
-}
 
 
 void VirtualEntity::update(double elapsed){

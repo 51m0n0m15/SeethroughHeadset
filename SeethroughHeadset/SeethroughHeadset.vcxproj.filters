@@ -36,9 +36,6 @@
     <ClCompile Include="camManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="contentLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -46,6 +43,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="virtualEntity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="entityInstance.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cfg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -68,9 +71,6 @@
     <ClInclude Include="camManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="contentLoader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="mesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -80,33 +80,15 @@
     <ClInclude Include="virtualEntity.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="entityInstance.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cfg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shader\blend.frag">
-      <Filter>shader</Filter>
-    </None>
-    <None Include="shader\depthMap.frag">
-      <Filter>shader</Filter>
-    </None>
-    <None Include="shader\depthMap.vert">
-      <Filter>shader</Filter>
-    </None>
     <None Include="shader\drawTexture.frag">
-      <Filter>shader</Filter>
-    </None>
-    <None Include="shader\gauss.frag">
-      <Filter>shader</Filter>
-    </None>
-    <None Include="shader\gaussX.vert">
-      <Filter>shader</Filter>
-    </None>
-    <None Include="shader\gaussY.vert">
-      <Filter>shader</Filter>
-    </None>
-    <None Include="shader\glow.frag">
-      <Filter>shader</Filter>
-    </None>
-    <None Include="shader\glow.vert">
       <Filter>shader</Filter>
     </None>
     <None Include="shader\passthrough.vert">
@@ -118,5 +100,19 @@
     <None Include="shader\phong.vert">
       <Filter>shader</Filter>
     </None>
+    <None Include="shader\warpWithChromeAb.frag">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\warpWithoutChromeAb.frag">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="config.ini">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="shader.log">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
 </Project>

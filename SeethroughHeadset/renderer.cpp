@@ -1,17 +1,11 @@
 #include "renderer.h"
 
 
-Renderer::Renderer(GLuint w, GLuint h)
+Renderer::Renderer()
 {
 	vertexLoc=1;
 	normalLoc=2;
 	texCoordLoc=3;
-
-	stdWidth = w;
-	stdHeight = h;
-	glowWidth = w/2;
-	glowHeight = h/2;
-	glowEnabled = true;
 }
 
 Renderer::~Renderer(void)
@@ -20,11 +14,8 @@ Renderer::~Renderer(void)
 	delete riftManager;
 }
 
-void Renderer::setScene(VirtualEntity *_scene){
-	scene = _scene;
-}
 
-void Renderer::init(){
+void Renderer::init(vector<VirtualEntity*> *entities){
 	//Set-UP OPENGL-Stuff
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_STENCIL_TEST);
@@ -32,22 +23,25 @@ void Renderer::init(){
 	glEnable(GL_FRAMEBUFFER);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_MULTISAMPLE);
-	glClearColor(0.0,0.0,0.0,1.0);
+	glClearColor(1.0,1.0,1.0,1.0);
 	glClearStencil(0x0);
 
 	compileAndLinkShaders();
-	setupBuffers(scene->root);
+	//setupBuffers(scene->root);
+	for(int i=0; i<entities->size(); i++){
+		setupBuffers(entities->at(i)->root);
+	}
 
 	//create the fbos and render textures
-	int numFBOs = 4;
+	int numFBOs = 2;
 	FBOs = new GLuint[numFBOs];
 	renderTex = new GLuint[numFBOs];
 	depthTex = new GLuint[numFBOs];
-	//main
-	setupFBO(stdWidth, stdHeight, 0, true, true, true);
-	//glow
-	setupFBO(glowWidth, glowHeight, 1, true, true, false);
-	setupFBO(glowWidth, glowHeight, 2, true, true, false);
+
+	//left and right half images
+	setupFBO(Cfg::displayW/2, Cfg::displayH, 0, true, true, true);
+	setupFBO(Cfg::displayW/2, Cfg::displayH, 1, true, true, true);
+	
 
 	//for direct rendering of texture
 	setupQuad();
@@ -59,7 +53,7 @@ void Renderer::init(){
 void Renderer::compileAndLinkShaders()
 {
 	std::ofstream log;
-	log.open("log.txt");
+	log.open("shader.log");
 
 	//phong
 	if(!phong.compileShaderFromFile("shader/phong.vert",GLSLShader::VERTEX)) log << phong.log().c_str() << endl;
@@ -72,49 +66,6 @@ void Renderer::compileAndLinkShaders()
 		log << phong.log().c_str() << endl;
 		exit(1);
 	}
-	
-
-	//glow
-	if(!glow.compileShaderFromFile("shader/glow.vert",GLSLShader::VERTEX)) log << glow.log().c_str() << endl;
-	if(!glow.compileShaderFromFile("shader/glow.frag",GLSLShader::FRAGMENT)) log << glow.log().c_str() << endl;
-	glow.bindAttribLocation(vertexLoc, "position");
-	glow.bindAttribLocation(texCoordLoc, "textureCoord");
-	if(!glow.link()) log << glow.log().c_str() << endl;
-	if(!glow.validate()){
-		log << glow.log().c_str() << endl;
-		exit(1);
-	}
-
-
-	//gaussX
-	if(!gaussX.compileShaderFromFile("shader/gaussX.vert",GLSLShader::VERTEX)) log << gaussX.log().c_str() << endl;
-	if(!gaussX.compileShaderFromFile("shader/gauss.frag",GLSLShader::FRAGMENT)) log << gaussX.log().c_str() << endl;
-	gaussX.bindAttribLocation(vertexLoc, "position");
-	if(!gaussX.link()) log << gaussX.log().c_str() << endl;
-	if(!gaussX.validate()){
-		log << gaussX.log().c_str() << endl;
-		exit(1);
-	}
-
-	//gaussY
-	if(!gaussY.compileShaderFromFile("shader/gaussY.vert",GLSLShader::VERTEX)) log << gaussY.log().c_str() << endl;
-	if(!gaussY.compileShaderFromFile("shader/gauss.frag",GLSLShader::FRAGMENT)) log << gaussY.log().c_str() << endl;
-	gaussY.bindAttribLocation(vertexLoc, "position");
-	if(!gaussY.link()) log << gaussY.log().c_str() << endl;
-	if(!gaussY.validate()){
-		log << gaussY.log().c_str() << endl;
-		exit(1);
-	}
-
-	//blend
-	if(!blend.compileShaderFromFile("shader/passthrough.vert",GLSLShader::VERTEX)) log << blend.log().c_str() << endl;
-	if(!blend.compileShaderFromFile("shader/blend.frag",GLSLShader::FRAGMENT)) log << blend.log().c_str() << endl;
-	blend.bindAttribLocation(vertexLoc, "position");
-	if(!blend.link()) log << blend.log().c_str() << endl;
-	if(!blend.validate()){
-		log << blend.log().c_str() << endl;
-		exit(1);
-	}
 
 	//drawTexture
 	if(!drawTexture.compileShaderFromFile("shader/passthrough.vert",GLSLShader::VERTEX)) log << drawTexture.log().c_str() << endl;
@@ -123,6 +74,16 @@ void Renderer::compileAndLinkShaders()
 	if(!drawTexture.link()) log << drawTexture.log().c_str() << endl;
 	if(!drawTexture.validate()){
 		log << drawTexture.log().c_str() << endl;
+		exit(1);
+	}
+
+	//warp
+	if(!warp.compileShaderFromFile("shader/passthrough.vert",GLSLShader::VERTEX)) log << warp.log().c_str() << endl;
+	if(!warp.compileShaderFromFile("shader/warpWithChromeAb.frag",GLSLShader::FRAGMENT)) log << warp.log().c_str() << endl;
+	warp.bindAttribLocation(vertexLoc, "position");
+	if(!warp.link()) log << warp.log().c_str() << endl;
+	if(!warp.validate()){
+		log << warp.log().c_str() << endl;
 		exit(1);
 	}
 
@@ -250,98 +211,86 @@ void Renderer::setupFBO(GLuint w, GLuint h, int index, bool color, bool depth, b
 }
 
 
-void Renderer::render(){
+void Renderer::render(vector<EntityInstance*> *entities){
 
 	riftManager->updateViewMatrices();
 	camManager->refresh();
 	makeCamTextures(camManager->getFrameL(), camManager->getFrameR());
 	
-
-	//prepare main framebuffer
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	
 	
 
 	////////////////////////DRAW VIRTUAL OBJECTS
 	glStencilFunc(GL_ALWAYS, 1, 0xff);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 	phong.use();
-	phong.setUniform("lightPos", vec3(0,riftManager->getEyeHeight(),0));
+	phong.setUniform("lightPos", vec3(0,Cfg::eyeHeight,0));
 	//left
-	glViewport(0, 0, stdWidth/2, stdHeight);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBOs[0]);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glViewport(0, 0, Cfg::displayW/2, Cfg::displayH);
 	phong.setUniform("viewMatrix", riftManager->getViewLeft());
 	phong.setUniform("projMatrix", riftManager->getProjLeft());
 	phong.setUniform("cameraPos", vec3(riftManager->getViewLeft()*vec4(0,0,0,1)));
-	recursiveRendering(scene->root, idMat, PHONG);
+	for(int i=0; i<entities->size(); i++){
+		recursiveRendering(entities->at(i)->entity->root, entities->at(i)->getTransform());
+	}
 	//right
-	glViewport(stdWidth/2, 0, stdWidth/2, stdHeight);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBOs[1]);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glViewport(0, 0, Cfg::displayW/2, Cfg::displayH);
 	phong.setUniform("viewMatrix", riftManager->getViewRight());
 	phong.setUniform("projMatrix", riftManager->getProjRight());
 	phong.setUniform("cameraPos", vec3(riftManager->getViewRight()*vec4(0,0,0,1)));
-	recursiveRendering(scene->root, idMat, PHONG);
+	for(int i=0; i<entities->size(); i++){
+		recursiveRendering(entities->at(i)->entity->root, entities->at(i)->getTransform());
+	}
 
 
 
 	////////////////////////DRAW CAMERA FRAMES
-	glStencilFunc(GL_NOTEQUAL, 1, 0xff);
-	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-	drawTexture.use();
-	drawTexture.setUniform("tex",0);
-	//left
-	glViewport(0, 0, stdWidth/2, stdHeight);
-	renderTextureQuad(leftCamTex);
-	//right
-	glViewport(stdWidth/2, 0, stdWidth/2, stdHeight);
-	renderTextureQuad(rightCamTex);
-
-
-
-	////////////////////////GLOW PASS		(careful: clears stencil and depth bit of main buffer!)
-	if(glowEnabled){
-		glBindFramebuffer(GL_FRAMEBUFFER, FBOs[1]);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glow.use();
-		//left
-		glViewport(0, 0, glowWidth/2, glowHeight);
-		glow.setUniform("viewMatrix", riftManager->getViewLeft());
-		glow.setUniform("projMatrix", riftManager->getProjLeft());
-		recursiveRendering(scene->root, idMat, GLOW);
-		//right
-		glViewport(glowWidth/2, 0, glowWidth/2, glowHeight);
-		glow.setUniform("viewMatrix", riftManager->getViewRight());
-		glow.setUniform("projMatrix", riftManager->getProjRight());
-		recursiveRendering(scene->root, idMat, GLOW);
-		
-		//filtering: filters whole frame, not left/right separately; may cause artifacts at left/right-boundary
-		glViewport(0, 0, glowWidth, glowHeight);
-		//horizontal: fbo1->fbo2
-		glBindFramebuffer(GL_FRAMEBUFFER, FBOs[2]);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		gaussX.use();
-		gaussX.setUniform("tex",0);
-		gaussX.setUniform("blurSize", scene->glowSize);
-		renderTextureQuad(renderTex[1]);
-		//vertical: fbo2->fbo1
-		glBindFramebuffer(GL_FRAMEBUFFER, FBOs[1]);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		gaussY.use();
-		gaussY.setUniform("tex",0);
-		gaussX.setUniform("blurSize", scene->glowSize);
-		renderTextureQuad(renderTex[2]);
-
-		//COMBINE GLOW WITH OTHER IMAGE ->screen
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glClear(GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_ONE, GL_ONE);
-		glViewport(0, 0, stdWidth, stdHeight);
+	if(camManager->camIsOn()){
+		glStencilFunc(GL_NOTEQUAL, 1, 0xff);
+		glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 		drawTexture.use();
 		drawTexture.setUniform("tex",0);
-		renderTextureQuad(renderTex[1]);
-		glDisable(GL_BLEND);
+		//left
+		glBindFramebuffer(GL_FRAMEBUFFER, FBOs[0]);
+		glViewport(0, 0, Cfg::displayW/2, Cfg::displayH);
+		renderTextureQuad(leftCamTex);
+		//right
+		glBindFramebuffer(GL_FRAMEBUFFER, FBOs[1]);
+		glViewport(0, 0, Cfg::displayW/2, Cfg::displayH);
+		renderTextureQuad(rightCamTex);
 	}
 
+	
+	
 
+	//APPLY LENS CORRECTION
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	
+	//TODO: replace magic constants
+	warp.use();
+	warp.setUniform("tex",0);
+	
+	warp.setUniform("Scale", vec2(Cfg::distortionScale, Cfg::distortionScale*riftManager->getAspectRatio()));
+	warp.setUniform("ScaleIn", vec2(2.0f, 2.0f/riftManager->getAspectRatio()));
+	warp.setUniform("HmdWarpParam", riftManager->getWarpParameters());
+	warp.setUniform("ChromAbParam", riftManager->getChromAbParameters());
+	
+	//drawTexture.use();
+	//drawTexture.setUniform("tex",0);
+	
+	//left
+	glViewport(0, 0, Cfg::displayW/2, Cfg::displayH);
+	warp.setUniform("LensCenter", riftManager->getLensCenter(RiftManager::LEFT_EYE));
+	renderTextureQuad(renderTex[0]);
+	//right
+	glViewport(Cfg::displayW/2, 0, Cfg::displayW/2, Cfg::displayH);
+	warp.setUniform("LensCenter", riftManager->getLensCenter(RiftManager::RIGHT_EYE));
+	renderTextureQuad(renderTex[1]);
 
 	//Swap Buffers after finished screen
 	glutSwapBuffers();
@@ -422,22 +371,16 @@ void Renderer::makeCamTextures(Mat *left, Mat *right){
 
 
 
-void Renderer::recursiveRendering(EntityNode *parent, mat4 transform, RenderPass pass){
+void Renderer::recursiveRendering(EntityNode *parent, mat4 transform){
 	
 	for(unsigned int i=0; i<parent->meshes.size(); i++){
-		switch(pass){
-		case PHONG:
-			phongPass(parent->meshes.at(i), parent->transform*transform);
-			break;
-		case GLOW:
-			glowPass(parent->meshes.at(i), parent->transform*transform);
-			break;
-		}
+		phongPass(parent->meshes.at(i), parent->transform*transform);
+		break;
 	}
 
 	//recursion
 	for(unsigned int i=0; i<parent->children.size(); i++){
-		recursiveRendering(parent->children.at(i), parent->transform*transform, pass);
+		recursiveRendering(parent->children.at(i), parent->transform*transform);
 	}
 }
 
@@ -462,23 +405,6 @@ void Renderer::phongPass(Mesh *m, mat4 transform){
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, m->material->normalmapID);
 
-	glBindVertexArray(m->vao);	
-	glDrawElements(GL_TRIANGLES, m->numFaces*3, GL_UNSIGNED_INT, m->indices);
-}
-
-void Renderer::glowPass(Mesh *m, mat4 transform){
-	glow.setUniform("modelMatrix", transform);
-
-	glow.setUniform("glowmap", 2);
-	glow.setUniform("hasGlowmap", m->material->glowmapID!=0);
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m->material->colormapID);
-
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, m->material->glowmapID);
-
-	
 	glBindVertexArray(m->vao);	
 	glDrawElements(GL_TRIANGLES, m->numFaces*3, GL_UNSIGNED_INT, m->indices);
 }
@@ -512,24 +438,4 @@ void Renderer::renderTextureQuad(GLuint tex){
 	GLuint indices[] = {0,3,2, 0,1,3};
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, indices);
 }
-
-
-/*void Renderer::render2TexturesQuad(GLuint tex1, GLuint tex2, GLSLProgram *p){
-
-	p->setUniform("tex1", 0);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, tex1);
-
-	p->setUniform("tex2", 1);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, tex2);
-
-	glEnableVertexAttribArray(vertexLoc);
-	glBindBuffer(GL_ARRAY_BUFFER, quadBuffer);
-	glVertexAttribPointer(vertexLoc, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
-	glDisableVertexAttribArray(vertexLoc);
-}*/
-
-
 

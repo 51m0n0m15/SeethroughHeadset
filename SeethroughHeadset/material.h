@@ -2,7 +2,6 @@
 
 #include "includes.h"
 #include <assimp/material.h>
-#include "contentLoader.h"
 
 class Material
 {
@@ -10,11 +9,12 @@ public:
 	Material(aiMaterial *material);
 	~Material(void);
 
+	GLuint loadTexture(const char* fName, int textureUnit);
+
 	vec3 colorAmbient;
 	vec3 colorDiffuse;
 	vec3 colorSpecular;
 	float shininess;
-	float opacity;
 
 	/*
 	TEXTURE UNITS:

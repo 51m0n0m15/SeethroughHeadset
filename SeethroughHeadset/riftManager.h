@@ -5,9 +5,16 @@
 #include "includes.h"
 using namespace OVR;
 
+
+
+
+
 class RiftManager
 {
+
 public:
+	enum Eye{LEFT_EYE, RIGHT_EYE};
+
 	RiftManager(void);
 	~RiftManager(void);
 
@@ -20,15 +27,15 @@ public:
 	glm::mat4 getProjRight(){return projRight;}
 	glm::mat4 getViewLeft(){return viewLeft;}
 	glm::mat4 getViewRight(){return viewRight;}
-	float getEyeHeight(){return eyeHeight;}
+	glm::mat4 getViewCenter(){return viewCenter;}
 
-	void setFov(float _fov){fov = _fov; updateProjMatrices();}
-	void setEyeHeight(float _eyeHeight){fov = eyeHeight;}
+	float getAspectRatio();
+	glm::vec2 getLensCenter(Eye eye);
+	glm::vec4 getWarpParameters();
+	glm::vec4 getChromAbParameters();
 
 
 protected:
-	float eyeHeight;
-	float fov;
 
 	OVR::Ptr<DeviceManager> pManager;
 	OVR::Ptr<HMDDevice> pHMD;
@@ -41,7 +48,7 @@ protected:
 	float EyeRoll;
 	float LastSensorYaw;
 
-	mat4 viewLeft, viewRight,
+	mat4 viewLeft, viewRight, viewCenter,
 			projLeft, projRight;
 
 };

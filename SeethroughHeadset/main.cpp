@@ -1,29 +1,32 @@
-//#include <opencv/cv.h>
-//#include <opencv/highgui.h>
+
 #include "includes.h"
 #include "renderer.h"
 #include "riftManager.h"
 #include "camManager.h"
 #include "virtualEntity.h"
+#include "entityInstance.h"
+#include <boost/filesystem.hpp>
 
 
 int windowHandle;
-int windowWidth = 1280;
-int windowHeight = 800;
-bool fullscreen = false;
-char *stdScenePath = "models/testscene.dae";
 
 
 //MOUSE INPUT
-int mouseX=windowWidth/2;
-int mouseY=windowHeight/2;
+int mouseX;
+int mouseY;
 bool mouseLocked=true;
+
+//placement
+bool placementMode=false;
+int currentEntity=0;
 
 //main components
 Renderer *renderer;
 RiftManager *riftManager;
 CamManager *camManager;
-VirtualEntity *scene;
+vector<VirtualEntity*> *availableEntities;
+vector<EntityInstance*> *positionedEntities;
+
 
 void closeApp(){
 	glutDestroyWindow(windowHandle);
@@ -39,7 +42,7 @@ void changeSize(int w, int h) {
 }
 
 void renderScene(void) {
-	renderer->render();
+	renderer->render(positionedEntities);
 }
 
 /////////////////////////////////
@@ -72,7 +75,10 @@ void keyDown(unsigned char key, int x, int y)
 
 	//switch cameras l/r
 	if((unsigned int)key=='f'){
-		renderer->switchCams();
+		camManager->switchCams();
+	}
+	if((unsigned int)key=='c'){
+		camManager->toggleCamOn();
 	}
 
 }
@@ -103,41 +109,43 @@ void animation(void){
 	//cout.flush();
 	//cout << '\r';
 
-	double fps = 24;
-	double moveSpeed = 30;
-
 
 	//move
-	/*
 	if (keyIsDown('w')) {
-		scene->cam->move(-elapsed*moveSpeed,0);
+		//when in placement mode, move active entity away from user
+		if(placementMode){
+			positionedEntities->back()->translate(0.0f,0.0f,-elapsed*Cfg::moveSpeed);
+		}
 	}
 	if (keyIsDown('s')) {
-		scene->cam->move(elapsed*moveSpeed,0);
+		//when in placement mode, move active entity away from user
+		if(placementMode){
+			positionedEntities->back()->translate(0.0f,0.0f,elapsed*Cfg::moveSpeed);
+		}
 	}
-	if (keyIsDown('a')) {
-		scene->cam->move(0,-elapsed*moveSpeed);
-	}
-	if (keyIsDown('d')) {
-		scene->cam->move(0,elapsed*moveSpeed);
-	}*/
 
 
 
-	/*
+	
 	if(mouseLocked){
 		//look
-		scene->cam->look((glutGet(GLUT_WINDOW_WIDTH)/2 - mouseX)/10,
-			(glutGet(GLUT_WINDOW_HEIGHT)/2 - mouseY)/10);
+		//scene->cam->look((glutGet(GLUT_WINDOW_WIDTH)/2 - mouseX)/10,
+		//	(glutGet(GLUT_WINDOW_HEIGHT)/2 - mouseY)/10);
+
 		//reset mouse
 		glutWarpPointer(glutGet(GLUT_WINDOW_WIDTH)/2,
 			glutGet(GLUT_WINDOW_HEIGHT)/2);
 	}
-	*/
+	
 
-	scene->update(elapsed*fps);
+	for(int i=0; i<availableEntities->size(); i++){
+		availableEntities->at(i)->update(elapsed*Cfg::fps);
+	}
+	if(placementMode){
+		positionedEntities->back()->setRotation(glm::inverse(riftManager->getViewCenter()));
+	}
 
-	renderer->render();
+	renderer->render(positionedEntities);
 }
 
 void passiveMouse(int x, int y){
@@ -146,11 +154,47 @@ void passiveMouse(int x, int y){
 }
 
 void activeMouse(int button, int state, int x, int y){
+
+
 	if(button==GLUT_LEFT_BUTTON && state==GLUT_DOWN){
-		mouseLocked = true;
+
+		if(mouseLocked){
+
+			if(!placementMode){
+				//show first object in list of available entities
+
+				positionedEntities->push_back(new EntityInstance(availableEntities->at(currentEntity))); 
+				positionedEntities->back()->setRotation(glm::inverse(riftManager->getViewCenter()));
+				positionedEntities->back()->translate(0.0f,0.0f,-2.0f);
+				placementMode = true;
+			}
+			else{
+				//fix selected object in space
+				placementMode = false;
+			}
+		}
+
+
+		else{
+			mouseLocked = true;
+		}
 	}
+
 }
 
+//when in placement mode, display next/previous entity
+void mouseWheel(int button, int dir, int x, int y){
+	if(!placementMode) return;
+	
+	if(dir > 0){
+		currentEntity = (currentEntity+1)%availableEntities->size();
+	}
+	else{
+		currentEntity = (currentEntity-1)%availableEntities->size();
+	}
+
+	positionedEntities->back()->entity = availableEntities->at(currentEntity);
+}
 
 
 
@@ -158,45 +202,37 @@ void activeMouse(int button, int state, int x, int y){
 int main(int argc, char *argv[])
 {
 	
+	//read config file
+	Cfg::load("config.ini");
 	
+
 	glutInit(&argc, argv);
-	
-	char *scenePath;
-	
-	
-	if(argc >= 3){
-		if(argv[1][0] == 'f')
-			fullscreen = true;
-			scenePath = argv[2];
-	} else if(argc >=2){
-		if(argv[1][0] == 'f')
-			fullscreen = true;
-		scenePath=stdScenePath;
-	} else{
-		scenePath=stdScenePath;
-	}
 	
 
 	//glutInitContextVersion(4,3);	//strange: wird hier die version festgelegt, gibts keine texturen. und keine beleuchtung.
 	glutInitContextProfile(GLUT_CORE_PROFILE);
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA | GLUT_STENCIL);
 	glutInitWindowPosition(0,0);
-	glutInitWindowSize(windowWidth,windowHeight);
+	glutInitWindowSize(Cfg::displayW, Cfg::displayH);
 	
 	
 	windowHandle = glutCreateWindow("Seethrough Headset Demo");
 
+	/*
 	if(fullscreen){
 		glutFullScreen();
 		windowWidth = glutGet(GLUT_WINDOW_WIDTH);
 		windowHeight = glutGet(GLUT_WINDOW_HEIGHT);
 	}
+	*/
 
+	//set UI callback functions
 	glutDisplayFunc(renderScene);
 	glutIdleFunc(animation);
 	glutReshapeFunc(changeSize);
 	glutPassiveMotionFunc(passiveMouse);
 	glutMouseFunc(activeMouse);
+	glutMouseWheelFunc(mouseWheel);
 	glutSetCursor(GLUT_CURSOR_NONE);
 	
 	
@@ -215,23 +251,33 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
+
+	//load models from folder
+	availableEntities = new vector<VirtualEntity*>;
+	positionedEntities = new vector<EntityInstance*>;
+	boost::filesystem::directory_iterator iterator(Cfg::modelPath);
+	cout << "Loading models:" << endl;
+	for(; iterator != boost::filesystem::directory_iterator(); ++iterator)
+	{
+		if(iterator->path().filename().extension().string()==Cfg::modelFileExt){
+			string f = iterator->path().filename().string();
+			availableEntities->push_back(new VirtualEntity((Cfg::modelPath+"/"+f).c_str()));
+		}
+	}
 	
 
-	//create rift manager
+
+	//create rift manager & cam manager
 	riftManager = new RiftManager();
-	riftManager->setEyeHeight(1.5f);
-	riftManager->setFov(57.0f);
 	camManager = new CamManager();
-
-	//create scene
-	scene = new VirtualEntity(scenePath);
 	
+
 	//create renderer
-	renderer = new Renderer(windowWidth, windowHeight);
-	renderer->setScene(scene);
+	renderer = new Renderer();
 	renderer->setCamManager(camManager);
 	renderer->setRiftManager(riftManager);
-	renderer->init();
+	renderer->init(availableEntities);
+
 
 	// Start Loop
 	glutMainLoop();

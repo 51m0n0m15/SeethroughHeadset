@@ -32,3 +32,7 @@ using glm::vec4;
 
 //opencv
 #include <opencv.hpp>
+
+
+//config
+#include "cfg.h"
