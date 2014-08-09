@@ -51,6 +51,9 @@
     <ClCompile Include="cfg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="texample.cpp">
+      <Filter>Resource Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="includes.h">

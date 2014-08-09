@@ -4,8 +4,10 @@
 EntityInstance::EntityInstance(VirtualEntity *_entity)
 {
 	entity = _entity;
-	rotation = idMat;
+	globalRotation = idMat;
+	localRotation = idMat;
 	translation = idMat;
+	scale = idMat;
 }
 
 

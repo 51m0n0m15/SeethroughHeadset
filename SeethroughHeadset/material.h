@@ -9,7 +9,7 @@ public:
 	Material(aiMaterial *material);
 	~Material(void);
 
-	GLuint loadTexture(const char* fName, int textureUnit);
+	static GLuint loadTexture(const char* fName, int textureUnit);
 
 	vec3 colorAmbient;
 	vec3 colorDiffuse;

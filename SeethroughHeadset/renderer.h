@@ -24,6 +24,8 @@ public:
 	void setCamManager(CamManager *_camManager){camManager = _camManager;}
 	void init(vector<VirtualEntity*> *entities);	//must be called after setScene()
 	void render(vector<EntityInstance*> *entities);
+	void toggleLenseCorrection(){lenseCorrection = !lenseCorrection;}
+	void toggleShowGrid(){showGrid=!showGrid;}
 	~Renderer(void);
 
 private:
@@ -44,17 +46,13 @@ private:
 	GLuint leftCamTex, rightCamTex;
 
 	//fbos
-	/*
-	0 - Main: stdWidth x stdHeight, color+depth+stencil
-	1 - GlowBuffer1: glowWidth x glowHeight, color+depth
-	2 - GlowBuffer2: glowWidth x glowHeight, color+depth
-	3 - Depth map: stdWidth x stdHeight, depth	(not needed at the moment)
-	*/
 	GLuint *FBOs;
 	GLuint *renderTex;
 	GLuint *depthTex;
 	
-	
+	bool lenseCorrection;
+	bool showGrid;
+	GLuint grid;
 
 
 	/////////////////METHODS

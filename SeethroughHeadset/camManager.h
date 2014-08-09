@@ -14,16 +14,30 @@ public:
 	void switchCams();
 	void toggleCamOn(){camOn=!camOn;}
 	bool camIsOn(){return camOn;}
-	Mat* getFrameL(){return frameL;}
-	Mat* getFrameR(){return frameR;}
+	//Mat* getFrameL(){return frameL;}
+	//Mat* getFrameR(){return frameR;}
+	GLuint getLeftTex(){return leftTex;}
+	GLuint getRightTex(){return rightTex;}
 
 private:
 	bool camOn;
 	bool leftConnected, rightConnected;
 
-	VideoCapture *capL;
+	/*VideoCapture *capL;
 	VideoCapture *capR;
 	Mat *frameL;
 	Mat *frameR;
+	*/
+
+	CvCapture *capL;
+	CvCapture *capR;
+	IplImage *frameL;
+	IplImage *frameR;
+
+	IplImage *frameLTmp;
+	IplImage *frameRTmp;
+
+	GLuint leftTex;
+	GLuint rightTex;
 };
 

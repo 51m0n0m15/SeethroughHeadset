@@ -91,6 +91,9 @@
     <ClCompile Include="material.cpp" />
     <ClCompile Include="renderer.cpp" />
     <ClCompile Include="riftManager.cpp" />
+    <ClCompile Include="texample.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="virtualEntity.cpp" />
     <ClCompile Include="entityNode.cpp" />
     <ClCompile Include="mesh.cpp" />

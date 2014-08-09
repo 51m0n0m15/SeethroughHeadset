@@ -6,6 +6,8 @@ Renderer::Renderer()
 	vertexLoc=1;
 	normalLoc=2;
 	texCoordLoc=3;
+	lenseCorrection = true;
+	showGrid=false;
 }
 
 Renderer::~Renderer(void)
@@ -23,7 +25,7 @@ void Renderer::init(vector<VirtualEntity*> *entities){
 	glEnable(GL_FRAMEBUFFER);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_MULTISAMPLE);
-	glClearColor(1.0,1.0,1.0,1.0);
+	glClearColor(0.0,0.0,0.0,1.0);
 	glClearStencil(0x0);
 
 	compileAndLinkShaders();
@@ -45,6 +47,9 @@ void Renderer::init(vector<VirtualEntity*> *entities){
 
 	//for direct rendering of texture
 	setupQuad();
+
+	//the grid
+	grid = Material::loadTexture("models/texture/grid.jpg", 0);
 
 	//start webcams
 	camManager->open();
@@ -212,15 +217,12 @@ void Renderer::setupFBO(GLuint w, GLuint h, int index, bool color, bool depth, b
 
 
 void Renderer::render(vector<EntityInstance*> *entities){
-
-	riftManager->updateViewMatrices();
-	camManager->refresh();
-	makeCamTextures(camManager->getFrameL(), camManager->getFrameR());
 	
 	
-	
-
+		
 	////////////////////////DRAW VIRTUAL OBJECTS
+	riftManager->updateViewMatrices();
+
 	glStencilFunc(GL_ALWAYS, 1, 0xff);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 	phong.use();
@@ -245,10 +247,12 @@ void Renderer::render(vector<EntityInstance*> *entities){
 	for(int i=0; i<entities->size(); i++){
 		recursiveRendering(entities->at(i)->entity->root, entities->at(i)->getTransform());
 	}
-
-
-
+	
+	
 	////////////////////////DRAW CAMERA FRAMES
+	camManager->refresh();
+	//makeCamTextures(camManager->getFrameL(), camManager->getFrameR());
+
 	if(camManager->camIsOn()){
 		glStencilFunc(GL_NOTEQUAL, 1, 0xff);
 		glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
@@ -256,41 +260,76 @@ void Renderer::render(vector<EntityInstance*> *entities){
 		drawTexture.setUniform("tex",0);
 		//left
 		glBindFramebuffer(GL_FRAMEBUFFER, FBOs[0]);
+		glViewport(0+Cfg::cameraOffset, 0, Cfg::displayW/2, Cfg::displayH);
+		//renderTextureQuad(leftCamTex);
+		renderTextureQuad(camManager->getLeftTex());
+		//right
+		glBindFramebuffer(GL_FRAMEBUFFER, FBOs[1]);
+		glViewport(0-Cfg::cameraOffset, 0, Cfg::displayW/2, Cfg::displayH);
+		//renderTextureQuad(rightCamTex);
+		renderTextureQuad(camManager->getRightTex());
+	}
+
+
+	//DRAW REGULAR GRID
+	if(showGrid){
+		glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_SRC_COLOR);
+		glEnable(GL_BLEND);
+		glDisable(GL_STENCIL_TEST);
+		glDisable(GL_DEPTH_TEST);
+
+		drawTexture.use();
+		drawTexture.setUniform("tex",0);
+
+		//left
+		glBindFramebuffer(GL_FRAMEBUFFER, FBOs[0]);
 		glViewport(0, 0, Cfg::displayW/2, Cfg::displayH);
-		renderTextureQuad(leftCamTex);
+		renderTextureQuad(grid);
 		//right
 		glBindFramebuffer(GL_FRAMEBUFFER, FBOs[1]);
 		glViewport(0, 0, Cfg::displayW/2, Cfg::displayH);
-		renderTextureQuad(rightCamTex);
+		renderTextureQuad(grid);
+
+		glDisable(GL_BLEND);
+		glEnable(GL_STENCIL_TEST);
+		glEnable(GL_DEPTH_TEST);
 	}
 
-	
-	
 
-	//APPLY LENS CORRECTION
+	//render to screen
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	
-	//TODO: replace magic constants
-	warp.use();
-	warp.setUniform("tex",0);
-	
-	warp.setUniform("Scale", vec2(Cfg::distortionScale, Cfg::distortionScale*riftManager->getAspectRatio()));
-	warp.setUniform("ScaleIn", vec2(2.0f, 2.0f/riftManager->getAspectRatio()));
-	warp.setUniform("HmdWarpParam", riftManager->getWarpParameters());
-	warp.setUniform("ChromAbParam", riftManager->getChromAbParameters());
-	
-	//drawTexture.use();
-	//drawTexture.setUniform("tex",0);
-	
-	//left
-	glViewport(0, 0, Cfg::displayW/2, Cfg::displayH);
-	warp.setUniform("LensCenter", riftManager->getLensCenter(RiftManager::LEFT_EYE));
-	renderTextureQuad(renderTex[0]);
-	//right
-	glViewport(Cfg::displayW/2, 0, Cfg::displayW/2, Cfg::displayH);
-	warp.setUniform("LensCenter", riftManager->getLensCenter(RiftManager::RIGHT_EYE));
-	renderTextureQuad(renderTex[1]);
+	if(lenseCorrection){    //apply rift lense correction
+		warp.use();
+		warp.setUniform("tex",0);
+
+		warp.setUniform("Scale", vec2(Cfg::distortionScale, Cfg::distortionScale*riftManager->getAspectRatio()));
+		warp.setUniform("ScaleIn", vec2(2.0f, 2.0f/riftManager->getAspectRatio()));
+		warp.setUniform("HmdWarpParam", riftManager->getWarpParameters());
+		warp.setUniform("ChromAbParam", riftManager->getChromAbParameters());
+
+		//left
+		glViewport(0, 0, Cfg::displayW/2, Cfg::displayH);
+		warp.setUniform("LensCenter", riftManager->getLensCenter(RiftManager::LEFT_EYE));
+		renderTextureQuad(renderTex[0]);
+		//right
+		glViewport(Cfg::displayW/2, 0, Cfg::displayW/2, Cfg::displayH);
+		warp.setUniform("LensCenter", riftManager->getLensCenter(RiftManager::RIGHT_EYE));
+		renderTextureQuad(renderTex[1]);
+	}
+	else{	//no lense correction
+		drawTexture.use();
+		drawTexture.setUniform("tex",0);
+
+		//left
+		glViewport(0, 0, Cfg::displayW/2, Cfg::displayH);
+		renderTextureQuad(renderTex[0]);
+		//right
+		glViewport(Cfg::displayW/2, 0, Cfg::displayW/2, Cfg::displayH);
+		renderTextureQuad(renderTex[1]);
+	}
+
 
 	//Swap Buffers after finished screen
 	glutSwapBuffers();
@@ -374,13 +413,13 @@ void Renderer::makeCamTextures(Mat *left, Mat *right){
 void Renderer::recursiveRendering(EntityNode *parent, mat4 transform){
 	
 	for(unsigned int i=0; i<parent->meshes.size(); i++){
-		phongPass(parent->meshes.at(i), parent->transform*transform);
+		phongPass(parent->meshes.at(i), transform*parent->transform);
 		break;
 	}
 
 	//recursion
 	for(unsigned int i=0; i<parent->children.size(); i++){
-		recursiveRendering(parent->children.at(i), parent->transform*transform);
+		recursiveRendering(parent->children.at(i), transform*parent->transform);
 	}
 }
 

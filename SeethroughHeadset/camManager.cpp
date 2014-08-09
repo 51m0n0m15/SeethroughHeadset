@@ -5,45 +5,72 @@ CamManager::CamManager()
 {
 	camOn=true;
 
-	capL = new VideoCapture();
-	capR = new VideoCapture();
+	//capL = new VideoCapture();
+	//capR = new VideoCapture();
 
 	//capWidth, capHeight, CV_32F
-	frameL = new Mat();
-	frameR = new Mat();
+	//frameL = new Mat();
+	//frameR = new Mat();
 
-	leftConnected=false;
-	rightConnected=false;
+	leftConnected=true;
+	rightConnected=true;
 }
 
 
 CamManager::~CamManager(void)
 {
-	capL->release();
-	capR->release();
+	//capL->release();
+	//capR->release();
+	cvReleaseCapture(&capL);
+	cvReleaseCapture(&capR);
 	delete frameL;
 	delete frameR;
 }
 
 
 void CamManager::open(){
-	if(capL->open(Cfg::camIdLeft)) leftConnected=true;
+	/*if(capL->open(Cfg::camIdLeft)) leftConnected=true;
 	capL->set(CV_CAP_PROP_FRAME_WIDTH, Cfg::captureW);
 	capL->set(CV_CAP_PROP_FRAME_HEIGHT, Cfg::captureH);
+	capL->set(CV_CAP_PROP_FPS, 25);
 
 	if(capR->open(Cfg::camIdRight)) rightConnected=true;
 	capR->set(CV_CAP_PROP_FRAME_WIDTH, Cfg::captureW);
 	capR->set(CV_CAP_PROP_FRAME_HEIGHT, Cfg::captureH);
+	capR->set(CV_CAP_PROP_FPS, 25);
+	*/
+	try{
+		capL = cvCaptureFromCAM(Cfg::camIdLeft);
+		frameLTmp = cvQueryFrame(capL);
+		frameL = cvCreateImage(cvSize(frameLTmp->height,frameLTmp->width),frameLTmp->depth,frameLTmp->nChannels);
+		glGenTextures(1, &leftTex);
+	}
+	catch(Exception e){
+		leftConnected = false;
+		cout << "nothing left" << endl;
+	}
+	
+	try{
+		capR = cvCaptureFromCAM(Cfg::camIdRight);
+		frameRTmp = cvQueryFrame(capR);
+		frameR = cvCreateImage(cvSize(frameRTmp->height,frameRTmp->width),frameRTmp->depth,frameRTmp->nChannels);
+		glGenTextures(1, &leftTex);
+		glGenTextures(1, &rightTex);
+	}
+	catch(Exception e){
+		rightConnected = false;
+		cout << "nothing right" << endl;
+	}
 }
 
 void CamManager::refresh(){
-	
+
 	//black background if cameras off
 	if(!camOn){
 		return;
 	}
 	
-	if(leftConnected){
+	/*if(leftConnected){
 		*capL >> *frameL;
 		transpose(*frameL, *frameL);
 	} 
@@ -51,13 +78,102 @@ void CamManager::refresh(){
 	if(rightConnected){
 		*capR >> *frameR;
 		transpose(*frameR, *frameR);
-		//flip(*frameR, *frameR, 0);
-		//flip(*frameR, *frameR, 1);
+		if(Cfg::rotRightCam180){
+			flip(*frameR, *frameR, 0);
+			flip(*frameR, *frameR, 1);
+		}
+	}
+	*/
+	
+	
+	//left frame
+	if(leftConnected){
+		frameLTmp = cvQueryFrame(capL);
+		cvTranspose(frameLTmp, frameL);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, leftTex);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		// Image is memory aligned which means we there may be extra space at the end
+		// of each row. gluBuild2DMipmaps needs contiguous data, so we buffer it here
+		char * buffer = new char[frameL->width*frameL->height*frameL->nChannels];
+		int step     = frameL->widthStep;
+		int height   = frameL->height;
+		int width    = frameL->width;
+		int channels = frameL->nChannels;
+		char * data  = (char *)frameL->imageData;
+
+		for(int i=0;i<height;i++)
+		{
+			memcpy(&buffer[i*width*channels],&(data[i*step]),width*channels);
+		}
+
+		// Create Texture
+		glTexImage2D(
+			GL_TEXTURE_2D,
+			0,
+			GL_RGB,
+			frameL->width,
+			frameL->height,
+			0,
+			GL_BGR,
+			GL_UNSIGNED_BYTE,
+			buffer);
+
+		// Clean up buffer
+		delete[] buffer;
+	}
+
+	//right frame
+	if(rightConnected){
+		frameRTmp = cvQueryFrame(capR);
+		cvTranspose(frameRTmp, frameR);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, rightTex);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		// Image is memory aligned which means we there may be extra space at the end
+		// of each row. gluBuild2DMipmaps needs contiguous data, so we buffer it here
+		char * buffer = new char[frameR->width*frameR->height*frameR->nChannels];
+		int step     = frameR->widthStep;
+		int height   = frameR->height;
+		int width    = frameR->width;
+		int channels = frameR->nChannels;
+		char * data  = (char *)frameR->imageData;
+
+		for(int i=0;i<height;i++)
+		{
+			memcpy(&buffer[i*width*channels],&(data[i*step]),width*channels);
+		}
+
+		// Create Texture
+		glTexImage2D(
+			GL_TEXTURE_2D,
+			0,
+			GL_RGB,
+			frameR->width,
+			frameR->height,
+			0,
+			GL_BGR,
+			GL_UNSIGNED_BYTE,
+			buffer);
+
+
+		// Clean up buffer
+		delete[] buffer;
 	}
 }
 
 void CamManager::switchCams(){
-	VideoCapture *tmp = capL;
+	/*VideoCapture *tmp = capL;
+	capL = capR;
+	capR = tmp;
+	*/
+	CvCapture *tmp = capL;
 	capL = capR;
 	capR = tmp;
 }

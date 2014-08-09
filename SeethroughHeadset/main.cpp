@@ -67,7 +67,12 @@ void keyDown(unsigned char key, int x, int y)
 	//escape key
 	if((unsigned int)key==27){
 		if(mouseLocked)
-			mouseLocked = false;
+			if(placementMode){
+				positionedEntities->pop_back();
+				placementMode = false;
+			}
+			else
+				mouseLocked = false;
 		else{
 			closeApp();
 		}
@@ -77,8 +82,17 @@ void keyDown(unsigned char key, int x, int y)
 	if((unsigned int)key=='f'){
 		camManager->switchCams();
 	}
+	//disable/enable camera
 	if((unsigned int)key=='c'){
 		camManager->toggleCamOn();
+	}
+	//warp on/off
+	if((unsigned int)key=='r'){
+		renderer->toggleLenseCorrection();
+	}
+	//grid on/off
+	if((unsigned int)key=='g'){
+		renderer->toggleShowGrid();
 	}
 
 }
@@ -94,7 +108,7 @@ void initKeymapManager()
 
 clock_t lastFrame = 0;
 void animation(void){
-
+	
 	//first execution, set current time and return
 	if(lastFrame == 0){
 		lastFrame = clock();
@@ -105,9 +119,9 @@ void animation(void){
 	double elapsed = double(now - lastFrame) / CLOCKS_PER_SEC;
 	lastFrame=now;
 
-	//cout << 1/elapsed << " fps";
-	//cout.flush();
-	//cout << '\r';
+	cout << 1/elapsed << " fps";
+	cout.flush();
+	cout << '\r';
 
 
 	//move
@@ -125,12 +139,55 @@ void animation(void){
 	}
 
 
+	//test
+	if (keyIsDown('q')) {
+		Cfg::cameraOffset+=2;
+		//cout << "cameraOffset=" << Cfg::cameraOffset << ";"<< endl;
+	}
+	if (keyIsDown('e')) {
+		Cfg::cameraOffset-=2;
+		//cout << "cameraOffset=" << Cfg::cameraOffset << ";"<< endl;
+	}
+	//test
+	if (keyIsDown('a')) {
+		Cfg::fov+=1.0f;
+		riftManager->updateProjMatrices();
+		cout << "fov=" << Cfg::fov << ";"<< endl;
+	}
+	if (keyIsDown('d')) {
+		Cfg::fov-=1.0f;
+		riftManager->updateProjMatrices();
+		cout << "fov=" << Cfg::fov << ";"<< endl;
+	}
+	//test
+	if (keyIsDown('y')) {
+		Cfg::distortionScale+=0.01f;
+		riftManager->updateProjMatrices();
+		cout << "distortionScale=" << Cfg::distortionScale << ";"<< endl;
+	}
+	if (keyIsDown('x')) {
+		Cfg::distortionScale-=0.01f;
+		riftManager->updateProjMatrices();
+		cout << "distortionScale=" << Cfg::distortionScale << ";"<< endl;
+	}
+
+
 
 	
-	if(mouseLocked){
-		//look
-		//scene->cam->look((glutGet(GLUT_WINDOW_WIDTH)/2 - mouseX)/10,
-		//	(glutGet(GLUT_WINDOW_HEIGHT)/2 - mouseY)/10);
+	if(mouseLocked && placementMode){
+		//rotate object
+
+		
+		mat4 rotation = glm::rotate((float)(glutGet(GLUT_WINDOW_HEIGHT)/2 - mouseY)/20,
+									1.0f, 
+									0.0f,
+									0.0f);
+		rotation = rotation * glm::rotate((float)(glutGet(GLUT_WINDOW_WIDTH)/2 - mouseX)/20,
+									0.0f, 
+									1.0f,
+									0.0f);
+
+		positionedEntities->back()->setLocalRotation(rotation);
 
 		//reset mouse
 		glutWarpPointer(glutGet(GLUT_WINDOW_WIDTH)/2,
@@ -142,10 +199,11 @@ void animation(void){
 		availableEntities->at(i)->update(elapsed*Cfg::fps);
 	}
 	if(placementMode){
-		positionedEntities->back()->setRotation(glm::inverse(riftManager->getViewCenter()));
+		positionedEntities->back()->setGlobalRotation(glm::inverse(riftManager->getViewCenter()));
 	}
 
 	renderer->render(positionedEntities);
+	
 }
 
 void passiveMouse(int x, int y){
@@ -164,7 +222,7 @@ void activeMouse(int button, int state, int x, int y){
 				//show first object in list of available entities
 
 				positionedEntities->push_back(new EntityInstance(availableEntities->at(currentEntity))); 
-				positionedEntities->back()->setRotation(glm::inverse(riftManager->getViewCenter()));
+				positionedEntities->back()->setGlobalRotation(glm::inverse(riftManager->getViewCenter()));
 				positionedEntities->back()->translate(0.0f,0.0f,-2.0f);
 				placementMode = true;
 			}
@@ -190,9 +248,8 @@ void mouseWheel(int button, int dir, int x, int y){
 		currentEntity = (currentEntity+1)%availableEntities->size();
 	}
 	else{
-		currentEntity = (currentEntity-1)%availableEntities->size();
+		currentEntity = (availableEntities->size()+currentEntity-1)%availableEntities->size();
 	}
-
 	positionedEntities->back()->entity = availableEntities->at(currentEntity);
 }
 

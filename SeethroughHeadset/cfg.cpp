@@ -26,6 +26,9 @@ int Cfg::captureW;
 int Cfg::captureH;
 int Cfg::camIdLeft;
 int Cfg::camIdRight;
+bool Cfg::rotRightCam180;
+
+int Cfg::cameraOffset;
 
 
 void Cfg::load(char *path){
@@ -50,4 +53,7 @@ void Cfg::load(char *path){
 	captureH = pt.get<int>("captureH");
 	camIdLeft = pt.get<int>("camIdLeft");
 	camIdRight = pt.get<int>("camIdRight");
+	rotRightCam180 = pt.get<bool>("rotRightCam180");
+
+	cameraOffset = pt.get<int>("cameraOffset");
 }

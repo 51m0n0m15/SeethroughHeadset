@@ -30,6 +30,8 @@ public:
 	static int captureH;
 	static int camIdLeft;
 	static int camIdRight;
-	
+	static bool rotRightCam180;
+	//allows to translate camera images to achieve convergence:
+	static int cameraOffset;
 };
 
