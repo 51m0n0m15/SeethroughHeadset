@@ -16,8 +16,8 @@ public:
 	bool camIsOn(){return camOn;}
 	//Mat* getFrameL(){return frameL;}
 	//Mat* getFrameR(){return frameR;}
-	GLuint getLeftTex(){return leftTex;}
-	GLuint getRightTex(){return rightTex;}
+	GLuint getLeftTex();
+	GLuint getRightTex();
 
 private:
 	bool camOn;

@@ -5,62 +5,42 @@ CamManager::CamManager()
 {
 	camOn=true;
 
-	//capL = new VideoCapture();
-	//capR = new VideoCapture();
-
-	//capWidth, capHeight, CV_32F
-	//frameL = new Mat();
-	//frameR = new Mat();
-
-	leftConnected=true;
-	rightConnected=true;
+	leftConnected=false;
+	rightConnected=false;
 }
 
 
 CamManager::~CamManager(void)
 {
-	//capL->release();
-	//capR->release();
 	cvReleaseCapture(&capL);
 	cvReleaseCapture(&capR);
-	delete frameL;
-	delete frameR;
 }
 
 
 void CamManager::open(){
-	/*if(capL->open(Cfg::camIdLeft)) leftConnected=true;
-	capL->set(CV_CAP_PROP_FRAME_WIDTH, Cfg::captureW);
-	capL->set(CV_CAP_PROP_FRAME_HEIGHT, Cfg::captureH);
-	capL->set(CV_CAP_PROP_FPS, 25);
 
-	if(capR->open(Cfg::camIdRight)) rightConnected=true;
-	capR->set(CV_CAP_PROP_FRAME_WIDTH, Cfg::captureW);
-	capR->set(CV_CAP_PROP_FRAME_HEIGHT, Cfg::captureH);
-	capR->set(CV_CAP_PROP_FPS, 25);
-	*/
-	try{
-		capL = cvCaptureFromCAM(Cfg::camIdLeft);
+	//left
+	capL = cvCaptureFromCAM(Cfg::camIdLeft);
+	if(capL){
 		frameLTmp = cvQueryFrame(capL);
 		frameL = cvCreateImage(cvSize(frameLTmp->height,frameLTmp->width),frameLTmp->depth,frameLTmp->nChannels);
 		glGenTextures(1, &leftTex);
+		leftConnected = true;
 	}
-	catch(Exception e){
-		leftConnected = false;
-		cout << "nothing left" << endl;
-	}
+	else
+		cout << "Left cam (id " << Cfg::camIdLeft << ") not connected." << endl;
 	
-	try{
-		capR = cvCaptureFromCAM(Cfg::camIdRight);
+
+	//right
+	capR = cvCaptureFromCAM(Cfg::camIdRight);
+	if(capR){
 		frameRTmp = cvQueryFrame(capR);
 		frameR = cvCreateImage(cvSize(frameRTmp->height,frameRTmp->width),frameRTmp->depth,frameRTmp->nChannels);
-		glGenTextures(1, &leftTex);
 		glGenTextures(1, &rightTex);
+		rightConnected = true;
 	}
-	catch(Exception e){
-		rightConnected = false;
-		cout << "nothing right" << endl;
-	}
+	else
+		cout << "Right cam (id " << Cfg::camIdRight << ") not connected." << endl;
 }
 
 void CamManager::refresh(){
@@ -69,21 +49,6 @@ void CamManager::refresh(){
 	if(!camOn){
 		return;
 	}
-	
-	/*if(leftConnected){
-		*capL >> *frameL;
-		transpose(*frameL, *frameL);
-	} 
-
-	if(rightConnected){
-		*capR >> *frameR;
-		transpose(*frameR, *frameR);
-		if(Cfg::rotRightCam180){
-			flip(*frameR, *frameR, 0);
-			flip(*frameR, *frameR, 1);
-		}
-	}
-	*/
 	
 	
 	//left frame
@@ -126,10 +91,15 @@ void CamManager::refresh(){
 		delete[] buffer;
 	}
 
+
 	//right frame
 	if(rightConnected){
 		frameRTmp = cvQueryFrame(capR);
 		cvTranspose(frameRTmp, frameR);
+		if(Cfg::rotRightCam180){
+			cvFlip(frameR, frameR, 0);
+			cvFlip(frameR, frameR, 1);
+		}
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, rightTex);
@@ -169,11 +139,21 @@ void CamManager::refresh(){
 }
 
 void CamManager::switchCams(){
-	/*VideoCapture *tmp = capL;
-	capL = capR;
-	capR = tmp;
-	*/
 	CvCapture *tmp = capL;
 	capL = capR;
 	capR = tmp;
+}
+
+GLuint CamManager::getLeftTex(){
+	if(leftConnected)
+		return leftTex;
+	else
+		return 0;
+}
+
+GLuint CamManager::getRightTex(){
+	if(rightConnected)
+		return rightTex;
+	else
+		return 0;
 }

@@ -107,6 +107,8 @@ void initKeymapManager()
 
 
 clock_t lastFrame = 0;
+int frameCounter = 0;	//for displaying framerate
+clock_t fpsTimer = 0;	//for displaying framerate
 void animation(void){
 	
 	//first execution, set current time and return
@@ -119,9 +121,17 @@ void animation(void){
 	double elapsed = double(now - lastFrame) / CLOCKS_PER_SEC;
 	lastFrame=now;
 
-	cout << 1/elapsed << " fps";
-	cout.flush();
-	cout << '\r';
+
+	//display average framerate every second
+	double fpsElapsed = double(now - fpsTimer) / CLOCKS_PER_SEC;
+	if(fpsElapsed>1){
+		fpsTimer=now;
+		cout << frameCounter << " fps";
+		cout.flush();
+		cout << '\r';
+		frameCounter=0;
+	}
+	frameCounter++;
 
 
 	//move
