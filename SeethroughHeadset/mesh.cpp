@@ -1,5 +1,10 @@
 #include "mesh.h"
 
+/**
+Extracts geometry data from an assimp mesh and stores them in OpenGL-friendly arrays.
+@param mesh pointer to the assimp mesh
+@param _material pointer to a previously created material; one material can be used by many meshes.
+*/
 Mesh::Mesh(aiMesh *mesh, Material *_material)
 {
 	numVertices = mesh->mNumVertices;

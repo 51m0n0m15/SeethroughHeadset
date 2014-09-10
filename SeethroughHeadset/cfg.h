@@ -1,9 +1,13 @@
 #pragma once
 
 #include "includes.h"
+#include <boost/filesystem.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 
+/**
+Reads parameters from an ini file and stores them as public static variables.
+*/
 class Cfg
 {
 public:
@@ -12,26 +16,30 @@ public:
 
 	static void load(char* path);
 
+	//display
+	static int displayW;			/**< width of the whole HMD (left+right eye)*/
+	static int displayH;			/**< height of the HMD */
+
+	//models
+	static string modelPath;		/**< path to the folder that contains the models that should be loaded */
+	static string modelFileExt;		/**< e.g. '.dae' */
+
+	//viewing parameters
+	static float eyeHeight;			/**< y-coordinate of the eyes/camera in relation to the global coordinate system */
+	static float fov;				/**< field of view of the camera model used for rendering virtual objects;
+											should be set such that it matches the FOV of the cameras.*/
+	static int cameraOffset;		/**< defines an offset of the right and left camera frame 
+											towards the center in pixels. is used to achieve the right convergence.*/
+	static float camScale;			/**< scales the camera image in relation to the virtual objects */
+	static float distortionScale;	/**< constant that scales the wholeimage in the distortion correction shader pass. */
 	
-	static int displayW;
-	static int displayH;
 
-	static string modelPath;
-	static string modelFileExt;
+	//animation
+	static double fps;				/**< animation speed for animated models */
+	static double moveSpeed;		/**< animation speed for user-controlled movements */
 
-	static float eyeHeight;
-	static float fov;
-	static float distortionScale;
-
-	static double fps;
-	static double moveSpeed;
-
-	static int captureW;
-	static int captureH;
-	static int camIdLeft;
-	static int camIdRight;
-	static bool rotRightCam180;
-	//allows to translate camera images to achieve convergence:
-	static int cameraOffset;
+	//cameras
+	static int camIdLeft;			/**< id of left camera (can range from 0 to [number of connected cameras]-1)*/
+	static int camIdRight;			/**< id of right camera (can range from 0 to [number of connected cameras]-1)*/
 };
 

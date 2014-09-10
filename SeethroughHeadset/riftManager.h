@@ -2,13 +2,18 @@
 
 
 #include <ovr.h>
-#include "includes.h"
 using namespace OVR;
 
+#include "includes.h"
+#include "cfg.h"
 
 
 
 
+/**
+Handles the connection to the Oculus Rift and 
+delivers view and projection matrices for stereo rendering of virtual objects.
+*/
 class RiftManager
 {
 
@@ -18,16 +23,15 @@ public:
 	RiftManager(void);
 	~RiftManager(void);
 
-	void displayHMDInfo();
 	void displaySensorData();
 	void updateProjMatrices();
 	void updateViewMatrices();
 
-	glm::mat4 getProjLeft(){return projLeft;}
-	glm::mat4 getProjRight(){return projRight;}
-	glm::mat4 getViewLeft(){return viewLeft;}
-	glm::mat4 getViewRight(){return viewRight;}
-	glm::mat4 getViewCenter(){return viewCenter;}
+	glm::mat4 getProjLeft(){return projLeft;}		/**< Returns projection matrix for left eye. */
+	glm::mat4 getProjRight(){return projRight;}		/**< Returns projection matrix for right eye. */
+	glm::mat4 getViewLeft(){return viewLeft;}		/**< Returns view matrix for left eye. */
+	glm::mat4 getViewRight(){return viewRight;}		/**< Returns view matrix for left eye. */
+	glm::mat4 getViewCenter(){return viewCenter;}	/**< Returns central view matrix. */
 
 	float getAspectRatio();
 	glm::vec2 getLensCenter(Eye eye);
@@ -50,6 +54,5 @@ protected:
 
 	mat4 viewLeft, viewRight, viewCenter,
 			projLeft, projRight;
-
 };
 

@@ -2,14 +2,15 @@
 
 #include "includes.h"
 
-
-//from GLSL cooking book
 namespace GLSLShader {
 	enum GLSLShaderType {
 		VERTEX, FRAGMENT, GEOMETRY,TESS_CONTROL, TESS_EVALUATION
 	};
 };
 
+/**
+A wrapper class for GLSL shaders, taken from the "GLSL Cookbook"
+*/
 class GLSLProgram
 {
 	private:

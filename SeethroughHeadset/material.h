@@ -3,6 +3,16 @@
 #include "includes.h"
 #include <assimp/material.h>
 
+/**
+Holds material properties and texture handles (demo application).
+In particular:\n
+- ambient color\n
+- diffuse color\n
+- specular color\n
+- specular coefficient (phong illumination model)\n
+- color map\n
+- normal map
+*/
 class Material
 {
 public:
@@ -20,10 +30,8 @@ public:
 	TEXTURE UNITS:
 	0: color map
 	1: normal map
-	2: glow map
 	*/
-	GLuint colormapID;
-	GLuint normalmapID;
-	GLuint glowmapID;
+	GLuint colormapID;		/**< texture handle to color map */
+	GLuint normalmapID;		/**< texture handle to normal map */
 };
 

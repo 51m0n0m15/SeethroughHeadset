@@ -1,31 +1,29 @@
 #pragma once
 
-/*
-Texture unit convention:
-0: color map
-1: normal map
-2: glow map
-*/
-
+#include "includes.h"
 #include "virtualEntity.h"
 #include "entityInstance.h"
-#include "includes.h"
 #include "GLSLProgram.h"
 #include "camManager.h"
 #include "riftManager.h"
+#include "cfg.h"
 
 
-
+/**
+Takes care of everything related to rendering.
+This class is taylored to the demo application and probably 
+must be modified when realizing other applications.
+*/
 class Renderer
 {
 public:
 	Renderer();
-	void setRiftManager(RiftManager *_riftManager){riftManager = _riftManager;}
-	void setCamManager(CamManager *_camManager){camManager = _camManager;}
-	void init(vector<VirtualEntity*> *entities);	//must be called after setScene()
+	void setRiftManager(RiftManager *_riftManager){riftManager = _riftManager;}		/**< sets a RiftManager; must be called befor rendering virtual objects */
+	void setCamManager(CamManager *_camManager){camManager = _camManager;}			/**< sets a CamManager; must be called befor initialization */
+	void init(vector<VirtualEntity*> *entities);
 	void render(vector<EntityInstance*> *entities);
-	void toggleLenseCorrection(){lenseCorrection = !lenseCorrection;}
-	void toggleShowGrid(){showGrid=!showGrid;}
+	void toggleLenseCorrection(){lenseCorrection = !lenseCorrection;}				/**< can disable/enable lens correction */
+	void toggleShowGrid(){showGrid=!showGrid;}										/**< can show a regular grid for calibration purposes */
 	~Renderer(void);
 
 private:
@@ -41,18 +39,19 @@ private:
 	// Locations
 	GLint vertexLoc, normalLoc, outputFLoc, texCoordLoc;
 	
-	// texture drawing
+	// textures
 	GLuint quadBuffer;	//for drawing viewport filling textures
 	GLuint leftCamTex, rightCamTex;
+	GLuint grid;
 
 	//fbos
 	GLuint *FBOs;
 	GLuint *renderTex;
-	GLuint *depthTex;
 	
+	//some flags
 	bool lenseCorrection;
 	bool showGrid;
-	GLuint grid;
+	
 
 
 	/////////////////METHODS
@@ -69,8 +68,6 @@ private:
 	//for rendering texture to screen
 	void setupQuad();
 	void renderTextureQuad(GLuint tex);
-	void makeCamTextures(Mat *left, Mat *right);
 
-	
 };
 

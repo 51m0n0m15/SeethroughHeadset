@@ -17,10 +17,15 @@ CamManager::~CamManager(void)
 }
 
 
-void CamManager::open(){
+/**
+Establishes connections to two specified webcams.
+If a specified camera is not connected, it is just marked as offline.
+@param idLeft/idRight Possible camera IDs range from 0 to (number of connected cameras)-1.
+*/
+void CamManager::open(int idLeft, int idRight){
 
 	//left
-	capL = cvCaptureFromCAM(Cfg::camIdLeft);
+	capL = cvCaptureFromCAM(idLeft);
 	if(capL){
 		frameLTmp = cvQueryFrame(capL);
 		frameL = cvCreateImage(cvSize(frameLTmp->height,frameLTmp->width),frameLTmp->depth,frameLTmp->nChannels);
@@ -28,11 +33,11 @@ void CamManager::open(){
 		leftConnected = true;
 	}
 	else
-		cout << "Left cam (id " << Cfg::camIdLeft << ") not connected." << endl;
+		cout << "Left cam (id " << idLeft << ") not connected." << endl;
 	
 
 	//right
-	capR = cvCaptureFromCAM(Cfg::camIdRight);
+	capR = cvCaptureFromCAM(idRight);
 	if(capR){
 		frameRTmp = cvQueryFrame(capR);
 		frameR = cvCreateImage(cvSize(frameRTmp->height,frameRTmp->width),frameRTmp->depth,frameRTmp->nChannels);
@@ -40,9 +45,14 @@ void CamManager::open(){
 		rightConnected = true;
 	}
 	else
-		cout << "Right cam (id " << Cfg::camIdRight << ") not connected." << endl;
+		cout << "Right cam (id " << idRight << ") not connected." << endl;
 }
 
+
+/**
+Fetches camera frames, rotates them by 90&deg; and converts them to OpenGL textures.
+If a camera is not connected, it is omited.
+*/
 void CamManager::refresh(){
 
 	//black background if cameras off
@@ -96,10 +106,6 @@ void CamManager::refresh(){
 	if(rightConnected){
 		frameRTmp = cvQueryFrame(capR);
 		cvTranspose(frameRTmp, frameR);
-		if(Cfg::rotRightCam180){
-			cvFlip(frameR, frameR, 0);
-			cvFlip(frameR, frameR, 1);
-		}
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, rightTex);
@@ -138,21 +144,31 @@ void CamManager::refresh(){
 	}
 }
 
+/**
+Switches the right/left assignments of the cameras (if both are connected).
+*/
 void CamManager::switchCams(){
+	if(!leftConnected || !rightConnected) return;
 	CvCapture *tmp = capL;
 	capL = capR;
 	capR = tmp;
 }
 
+/**
+Returns the texture handle to the left frame or 0, if the corresponding camera is not connected.
+*/
 GLuint CamManager::getLeftTex(){
-	if(leftConnected)
+	if(leftConnected && camOn)
 		return leftTex;
 	else
 		return 0;
 }
 
+/**
+Returns the texture handle to the right frame or 0, if the corresponding camera is not connected.
+*/
 GLuint CamManager::getRightTex(){
-	if(rightConnected)
+	if(rightConnected && camOn)
 		return rightTex;
 	else
 		return 0;

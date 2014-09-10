@@ -2,9 +2,11 @@
 #include "mesh.h"
 
 
+/**
+The VirtualEntity is constructed based on the specified geometry file.
+@param path path to geometry file. Has only been tested with .dae files.
+*/
 VirtualEntity::VirtualEntity(const char *path){ 
-
-
 	//Load Content!
 	loadGeometry(path);
 }
@@ -15,6 +17,10 @@ VirtualEntity::~VirtualEntity(){
 }
 
 
+/**
+Imports geometry and materials from a file using Assimp.
+@param source path to file. Has only been tested with .dae files.
+*/
 void VirtualEntity::loadGeometry(const char* source){
 	Assimp::Importer importer;
 	assimpScene = importer.ReadFile(source, aiProcessPreset_TargetRealtime_Fast);
@@ -33,6 +39,10 @@ void VirtualEntity::loadGeometry(const char* source){
 }
 
 
+/**
+Recursive method for traversing the assimp graph and converting 
+it to my scene graph structure.
+*/
 void VirtualEntity::recursiveSceneLoad(EntityNode *parent, aiNode *aiParent){
 	parent->name = string(aiParent->mName.C_Str());
 	
@@ -40,7 +50,7 @@ void VirtualEntity::recursiveSceneLoad(EntityNode *parent, aiNode *aiParent){
 	for(int i=0; i<aiParent->mNumMeshes; i++){
 		Mesh* temp  = new Mesh(assimpScene->mMeshes[aiParent->mMeshes[i]],
 			materials->at(assimpScene->mMeshes[aiParent->mMeshes[i]]->mMaterialIndex));
-		parent->addObject(temp);
+		parent->addMesh(temp);
 	}
 
 
@@ -97,11 +107,4 @@ void VirtualEntity::recursiveSceneLoad(EntityNode *parent, aiNode *aiParent){
 		parent->addChild(n);
 		recursiveSceneLoad(n,aiParent->mChildren[i]);
 	}
-}
-
-
-
-void VirtualEntity::update(double elapsed){
-	
-	root->update(elapsed);
 }

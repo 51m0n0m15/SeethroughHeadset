@@ -1,6 +1,9 @@
 #include "riftManager.h"
 
-
+/**
+Initializes the OVR api, connects to the rift and 
+establishes data structures to read the sensor data.
+*/
 RiftManager::RiftManager(void)
 {	
 	System::Init(Log::ConfigureDefaultLog(LogMask_All));
@@ -32,7 +35,10 @@ RiftManager::~RiftManager(void)
 	System::Destroy();
 }
 
-
+/**
+Computes left and right projection matrices, based on the HMD parameters.
+Needs to be done only once.
+*/
 void RiftManager::updateProjMatrices(){
 	//dummy matrices if no rift connected
 	if(pHMD==NULL){
@@ -61,21 +67,21 @@ void RiftManager::updateProjMatrices(){
 	float viewCenter = hmd->HScreenSize * 0.25f;
 	float eyeProjectionShift = viewCenter - hmd->LensSeparationDistance*0.5f;
 	float projectionCenterOffset = 4.0f * eyeProjectionShift / hmd->HScreenSize;
-
-	
-	
 	
 	projLeft = glm::translate(projectionCenterOffset, 0.0f, 0.0f) * projCenter;
 	projRight = glm::translate(-projectionCenterOffset, 0.0f, 0.0f) * projCenter;
-	
 }
 
+/**
+Computes left, right and central viewing matrices based on HMD parameters and sensor data.
+Should be called every frame.
+*/
 void RiftManager::updateViewMatrices(){
 	//dummy matrices if no rift connected
 	if(pHMD==NULL){
-		viewCenter = glm::perspective(Cfg::fov, 9.0f/16.0f, 0.01f, 1000.0f);
-		viewLeft = glm::perspective(Cfg::fov, 9.0f/16.0f, 0.01f, 1000.0f);
-		viewRight = glm::perspective(Cfg::fov, 9.0f/16.0f, 0.01f, 1000.0f);
+		viewCenter = idMat;
+		viewLeft = idMat;
+		viewRight = idMat;
 		return;
 	}
 	
@@ -98,7 +104,9 @@ void RiftManager::updateViewMatrices(){
 }
 
 
-
+/**
+Just for debugging.
+*/
 void RiftManager::displaySensorData(){
 	if(pHMD==NULL){
 		cout << "No Rift detected. Please connect one and restart application." << endl;
@@ -119,12 +127,18 @@ void RiftManager::displaySensorData(){
 	cout << EyeYaw << "   " << EyePitch << "   " << EyeRoll << endl;
 }
 
-
+/**
+Returns aspect ratio of half-screen
+*/
 float RiftManager::getAspectRatio(){
 	if(pHMD==NULL) return 4.0f/5.0f;
 	return (hmd->HResolution/2.0f) / hmd->VResolution;
 }
 
+/**
+Returns lens center of left or right eye
+@param eye LEFT_EYE or RIGHT_EYE
+*/
 glm::vec2 RiftManager::getLensCenter(Eye eye){
 	if(pHMD==NULL){
 		return vec2(0.5f,0.5f);
@@ -138,6 +152,9 @@ glm::vec2 RiftManager::getLensCenter(Eye eye){
 	}
 }
 
+/**
+Returns a set of parameters needed for distortion correction in shader.
+*/
 glm::vec4 RiftManager::getWarpParameters(){
 	if(pHMD==NULL){
 		return vec4(1.0f, 0.22f, 0.24f, 0.0f);
@@ -145,6 +162,9 @@ glm::vec4 RiftManager::getWarpParameters(){
 	return vec4(hmd->DistortionK[0], hmd->DistortionK[1], hmd->DistortionK[2], hmd->DistortionK[3]);
 }
 
+/**
+Returns a set of parameters needed for chromatic abberation correction in shader.
+*/
 glm::vec4 RiftManager::getChromAbParameters(){
 	if(pHMD==NULL){
 		return vec4(0.996f, -0.004f, 1.014f, 0.0f);

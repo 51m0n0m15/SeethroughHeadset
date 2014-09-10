@@ -1,3 +1,10 @@
+/**
+@file main.cpp
+Window creation, setup for demo application, user input, etc.
+*/
+
+
+#include <boost/filesystem.hpp>
 
 #include "includes.h"
 #include "renderer.h"
@@ -5,7 +12,8 @@
 #include "camManager.h"
 #include "virtualEntity.h"
 #include "entityInstance.h"
-#include <boost/filesystem.hpp>
+#include "cfg.h"
+
 
 
 int windowHandle;
@@ -138,38 +146,52 @@ void animation(void){
 	if (keyIsDown('w')) {
 		//when in placement mode, move active entity away from user
 		if(placementMode){
-			positionedEntities->back()->translate(0.0f,0.0f,-elapsed*Cfg::moveSpeed);
+			positionedEntities->back()->translate(0.0f,0.0f,(float)(-elapsed*Cfg::moveSpeed));
 		}
 	}
 	if (keyIsDown('s')) {
 		//when in placement mode, move active entity away from user
 		if(placementMode){
-			positionedEntities->back()->translate(0.0f,0.0f,elapsed*Cfg::moveSpeed);
+			positionedEntities->back()->translate(0.0f,0.0f,(float)(elapsed*Cfg::moveSpeed));
+		}
+	}
+
+	//scale object
+	if (keyIsDown('a')) {
+		if(placementMode){
+			positionedEntities->back()->scale(1.0f-(float)elapsed);
+		}
+	}
+	if (keyIsDown('d')) {
+		if(placementMode){
+			positionedEntities->back()->scale(1.0f+(float)elapsed);
 		}
 	}
 
 
-	//test
-	if (keyIsDown('q')) {
+	/////////////TEST
+
+	//camera offset
+	if (keyIsDown('n')) {
 		Cfg::cameraOffset+=2;
-		//cout << "cameraOffset=" << Cfg::cameraOffset << ";"<< endl;
+		cout << "cameraOffset=" << Cfg::cameraOffset << ";"<< endl;
 	}
-	if (keyIsDown('e')) {
+	if (keyIsDown('m')) {
 		Cfg::cameraOffset-=2;
-		//cout << "cameraOffset=" << Cfg::cameraOffset << ";"<< endl;
+		cout << "cameraOffset=" << Cfg::cameraOffset << ";"<< endl;
 	}
-	//test
-	if (keyIsDown('a')) {
+	//fov
+	if (keyIsDown('q')) {
 		Cfg::fov+=1.0f;
 		riftManager->updateProjMatrices();
 		cout << "fov=" << Cfg::fov << ";"<< endl;
 	}
-	if (keyIsDown('d')) {
+	if (keyIsDown('e')) {
 		Cfg::fov-=1.0f;
 		riftManager->updateProjMatrices();
 		cout << "fov=" << Cfg::fov << ";"<< endl;
 	}
-	//test
+	//distortion scale
 	if (keyIsDown('y')) {
 		Cfg::distortionScale+=0.01f;
 		riftManager->updateProjMatrices();
@@ -181,6 +203,15 @@ void animation(void){
 		cout << "distortionScale=" << Cfg::distortionScale << ";"<< endl;
 	}
 
+	//camera scale
+	if (keyIsDown('v')) {
+		Cfg::camScale*=0.99f;
+		cout << "camScale=" << Cfg::camScale << ";"<< endl;
+	}
+	if (keyIsDown('b')) {
+		Cfg::camScale*=1.01f;
+		cout << "camScale=" << Cfg::camScale << ";"<< endl;
+	}
 
 
 	
@@ -197,7 +228,7 @@ void animation(void){
 									1.0f,
 									0.0f);
 
-		positionedEntities->back()->setLocalRotation(rotation);
+		positionedEntities->back()->localRotate(rotation);
 
 		//reset mouse
 		glutWarpPointer(glutGet(GLUT_WINDOW_WIDTH)/2,
@@ -233,7 +264,7 @@ void activeMouse(int button, int state, int x, int y){
 
 				positionedEntities->push_back(new EntityInstance(availableEntities->at(currentEntity))); 
 				positionedEntities->back()->setGlobalRotation(glm::inverse(riftManager->getViewCenter()));
-				positionedEntities->back()->translate(0.0f,0.0f,-2.0f);
+				positionedEntities->back()->translate(0.0f,0.0f,-2.0f);	//put object 2m in front of user
 				placementMode = true;
 			}
 			else{

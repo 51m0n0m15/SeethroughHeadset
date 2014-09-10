@@ -1,3 +1,8 @@
+/**
+@file includes.h
+This file is is a collection of some includes and definitions that are used almost everywhere, just to make life easier..
+*/
+
 #pragma once
 
 #define _USE_MATH_DEFINES
@@ -8,7 +13,6 @@
 #include <fstream>
 #include <vector>
 #include <math.h>
-
 
 using std::string;
 using std::cout;
@@ -29,10 +33,3 @@ using glm::vec3;
 using glm::vec4;
 
 #define idMat mat4(1.0,0.0,0.0,0.0,   0.0,1.0,0.0,0.0,   0.0,0.0,1.0,0.0,   0.0,0.0,0.0,1.0)
-
-//opencv
-#include <opencv.hpp>
-
-
-//config
-#include "cfg.h"

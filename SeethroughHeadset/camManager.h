@@ -1,33 +1,37 @@
 #pragma once
 
-#include "includes.h"
+#include <opencv.hpp>
 using namespace cv;
 
+#include "includes.h"
+#include "cfg.h"
+
+
+/**
+Manages the connection to two USB cameras and delivers the camera frames as OpenGL textures.
+
+Standard usage:\n
+1) open(int idLeft, int idRight) to connect to the specified cameras\n
+2) refresh() to fetch the new camera frames and create textures\n
+3) getLeftTex() / getRightTex() return the current textures
+*/
 class CamManager
 {
 public:
 	CamManager();
 	~CamManager(void);
 
-	void open();
+	void open(int idLeft, int idRight);
 	void refresh();
 	void switchCams();
-	void toggleCamOn(){camOn=!camOn;}
+	void toggleCamOn(){camOn=!camOn;}	/**< The whole camera processing can be bypassed with this.*/
 	bool camIsOn(){return camOn;}
-	//Mat* getFrameL(){return frameL;}
-	//Mat* getFrameR(){return frameR;}
 	GLuint getLeftTex();
 	GLuint getRightTex();
 
 private:
 	bool camOn;
 	bool leftConnected, rightConnected;
-
-	/*VideoCapture *capL;
-	VideoCapture *capR;
-	Mat *frameL;
-	Mat *frameR;
-	*/
 
 	CvCapture *capL;
 	CvCapture *capR;

@@ -16,7 +16,18 @@ Renderer::~Renderer(void)
 	delete riftManager;
 }
 
-
+/**
+Initialization.
+A CamManager must be set before calling this method.\n
+the method:\n
+- sets desired OpenGL states\n
+- calls the compileAndLinkShaders() method\n
+- creates vertex array objects for all available entities\n
+- creates necessairy framebuffer objects and render textures for multi pass rendering\n
+- creates a screen filling quad that can be used for texture display\n
+- opens the webcam connection\n
+@param entities a vector containing all virtual entities that should be prepared for rendering
+*/
 void Renderer::init(vector<VirtualEntity*> *entities){
 	//Set-UP OPENGL-Stuff
 	glEnable(GL_DEPTH_TEST);
@@ -28,8 +39,10 @@ void Renderer::init(vector<VirtualEntity*> *entities){
 	glClearColor(0.0,0.0,0.0,1.0);
 	glClearStencil(0x0);
 
+	//create shader programs
 	compileAndLinkShaders();
-	//setupBuffers(scene->root);
+	
+	//create vertex array objects
 	for(int i=0; i<entities->size(); i++){
 		setupBuffers(entities->at(i)->root);
 	}
@@ -38,23 +51,30 @@ void Renderer::init(vector<VirtualEntity*> *entities){
 	int numFBOs = 2;
 	FBOs = new GLuint[numFBOs];
 	renderTex = new GLuint[numFBOs];
-	depthTex = new GLuint[numFBOs];
 
 	//left and right half images
 	setupFBO(Cfg::displayW/2, Cfg::displayH, 0, true, true, true);
 	setupFBO(Cfg::displayW/2, Cfg::displayH, 1, true, true, true);
 	
-
 	//for direct rendering of texture
 	setupQuad();
 
-	//the grid
+	//a regular grid that can be displayed for calibration purposes
 	grid = Material::loadTexture("models/texture/grid.jpg", 0);
 
 	//start webcams
-	camManager->open();
+	camManager->open(Cfg::camIdLeft, Cfg::camIdRight);
 }
 
+
+/**
+Compiles and links shader programs from files. Currently:\n
+- phong: a simple standard phong shader which is used to render virtual objects\n
+- drawTexture: can be used to draw a textures to the screen, in our case to draw the camera frames\n
+- warp: corrects distortion and chromatic abberation on the final image\n
+Shader compilation errors are written to the file "shader.log".\n
+other shaders can be added.
+*/
 void Renderer::compileAndLinkShaders()
 {
 	std::ofstream log;
@@ -92,10 +112,16 @@ void Renderer::compileAndLinkShaders()
 		exit(1);
 	}
 
+	//ADD MORE SHADERS HERE
+
 	log.close();
 }
 
 
+/**
+Is used to recursively traverse the scenegraph of a VirtualEntity
+and create vertex array objects for efficient rendering.
+*/
 void Renderer::setupBuffers(EntityNode *parent){
 
 	//for all objects in this node:
@@ -141,6 +167,15 @@ void Renderer::setupBuffers(EntityNode *parent){
 }
 
 
+/**
+Sets up a framebuffer object and a texture render target for color output (if desired)
+@param w buffer width
+@param h buffer height
+@param index index of buffer in the list
+@param color need color buffer?
+@param depth need depth buffer?
+@param stencil need stencil buffer?
+*/
 void Renderer::setupFBO(GLuint w, GLuint h, int index, bool color, bool depth, bool stenc){
 
 	// Generate and bind the framebuffer
@@ -162,7 +197,7 @@ void Renderer::setupFBO(GLuint w, GLuint h, int index, bool color, bool depth, b
 
 	// Create the depth buffer
 	GLuint depthBuf;
-	if(!stenc){
+	if(!stenc && depth){
 		glGenRenderbuffers(1, &depthBuf);
 		glBindRenderbuffer(GL_RENDERBUFFER, depthBuf);
 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, w, h);
@@ -170,21 +205,7 @@ void Renderer::setupFBO(GLuint w, GLuint h, int index, bool color, bool depth, b
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuf);
 	}
 
-	if(!stenc && depth){
-		// Create the texture object
-		glGenTextures(1, &depthTex[index]);
-		glActiveTexture(GL_TEXTURE1); // Use texture unit 1?
-		glBindTexture(GL_TEXTURE_2D, depthTex[index]);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		// Bind the texture to the FBO
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTex[index], NULL);
-	}
-	
 	GLuint stencil;
-
 	if(stenc){
 		// Create the depth-stencil buffer
 		glGenRenderbuffers(1, &stencil);
@@ -192,7 +213,6 @@ void Renderer::setupFBO(GLuint w, GLuint h, int index, bool color, bool depth, b
 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_STENCIL, w, h);
 		// Bind the depth-stencil buffer to the FBO
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, stencil);
-		//glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, stencil);
 	}
 
 	// Set the target for the fragment shader outputs
@@ -215,19 +235,31 @@ void Renderer::setupFBO(GLuint w, GLuint h, int index, bool color, bool depth, b
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-
+/**
+Performs one full render pass.
+Renders virtual objects, camera frames and a regular grid if desired.
+Performs lens correction.\n
+This method is taylored to the demo application, but can easily 
+modified to suit other applications.
+*/
 void Renderer::render(vector<EntityInstance*> *entities){
 	
 	
 		
-	////////////////////////DRAW VIRTUAL OBJECTS
+	////////////////////////DRAW VIRTUAL OBJECTS (modify this section for other applications)
+	
+	//make the riftManager calculate new view matrices from the sensor data
 	riftManager->updateViewMatrices();
 
+	/*	we use the stencil buffer to mark those fragments, where a virtual object exists;
+		later, the camera frames will not be drawn on those fragments.
+	*/
 	glStencilFunc(GL_ALWAYS, 1, 0xff);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 	phong.use();
 	phong.setUniform("lightPos", vec3(0,Cfg::eyeHeight,0));
-	//left
+	
+	//render left eye image to texture 0
 	glBindFramebuffer(GL_FRAMEBUFFER, FBOs[0]);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glViewport(0, 0, Cfg::displayW/2, Cfg::displayH);
@@ -237,7 +269,7 @@ void Renderer::render(vector<EntityInstance*> *entities){
 	for(int i=0; i<entities->size(); i++){
 		recursiveRendering(entities->at(i)->entity->root, entities->at(i)->getTransform());
 	}
-	//right
+	//render right eye image to texture 1
 	glBindFramebuffer(GL_FRAMEBUFFER, FBOs[1]);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glViewport(0, 0, Cfg::displayW/2, Cfg::displayH);
@@ -249,24 +281,34 @@ void Renderer::render(vector<EntityInstance*> *entities){
 	}
 	
 	
+
+
 	////////////////////////DRAW CAMERA FRAMES
+	
+	//refresh the camera-textures
 	camManager->refresh();
-	//makeCamTextures(camManager->getFrameL(), camManager->getFrameR());
 
 	if(camManager->camIsOn()){
+		//draw only on non-marked fragments
 		glStencilFunc(GL_NOTEQUAL, 1, 0xff);
 		glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 		drawTexture.use();
 		drawTexture.setUniform("tex",0);
-		//left
+		
+		int w = Cfg::displayW/4;
+		int h = Cfg::displayH/2;
+
+		//left image
 		glBindFramebuffer(GL_FRAMEBUFFER, FBOs[0]);
-		glViewport(0+Cfg::cameraOffset, 0, Cfg::displayW/2, Cfg::displayH);
-		//renderTextureQuad(leftCamTex);
+		glViewport(w-w*Cfg::camScale+Cfg::cameraOffset, h-h*Cfg::camScale, 
+			Cfg::displayW/2*Cfg::camScale, Cfg::displayH*Cfg::camScale);
+		//glViewport(0+Cfg::cameraOffset, 0, Cfg::displayW/2, Cfg::displayH);
 		renderTextureQuad(camManager->getLeftTex());
-		//right
+		//right image
 		glBindFramebuffer(GL_FRAMEBUFFER, FBOs[1]);
-		glViewport(0-Cfg::cameraOffset, 0, Cfg::displayW/2, Cfg::displayH);
-		//renderTextureQuad(rightCamTex);
+		glViewport(w-w*Cfg::camScale-Cfg::cameraOffset, h-h*Cfg::camScale, 
+			Cfg::displayW/2*Cfg::camScale, Cfg::displayH*Cfg::camScale);
+		//glViewport(0-Cfg::cameraOffset, 0, Cfg::displayW/2, Cfg::displayH);
 		renderTextureQuad(camManager->getRightTex());
 	}
 
@@ -296,7 +338,8 @@ void Renderer::render(vector<EntityInstance*> *entities){
 	}
 
 
-	//render to screen
+
+	//RENDER TO SCREEN (with or without lense correction)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	
@@ -336,80 +379,11 @@ void Renderer::render(vector<EntityInstance*> *entities){
 }
 
 
-
-void Renderer::makeCamTextures(Mat *left, Mat *right){
-	
-	glActiveTexture(GL_TEXTURE0);
-	// Generate a number for our textureID's unique handle
-	glDeleteTextures(1, &leftCamTex);
-	glGenTextures(1, &leftCamTex);
- 
-	// Bind to our texture handle
-	glBindTexture(GL_TEXTURE_2D, leftCamTex);
- 
-	// Set texture interpolation methods for minification and magnification
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-
-	// Set incoming texture format to:
-	// GL_BGR       for CV_CAP_OPENNI_BGR_IMAGE,
-	// GL_LUMINANCE for CV_CAP_OPENNI_DISPARITY_MAP,
-	// Work out other mappings as required ( there's a list in comments in main() )
-	GLenum inputColourFormat = GL_BGR;
-	if (left->channels() == 1)
-	{
-		inputColourFormat = GL_LUMINANCE;
-	}
- 
-	// Create the texture
-	glTexImage2D(GL_TEXTURE_2D,     // Type of texture
-	             0,                 // Pyramid level (for mip-mapping) - 0 is the top level
-	             GL_RGB,            // Internal colour format to convert to
-	             left->cols,          // Image width  i.e. 640 for Kinect in standard mode
-	             left->rows,          // Image height i.e. 480 for Kinect in standard mode
-	             0,                 // Border width in pixels (can either be 1 or 0)
-	             inputColourFormat, // Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
-	             GL_UNSIGNED_BYTE,  // Image data type
-	             left->ptr());        // The actual image data itself
-
-
-
-	// Generate a number for our textureID's unique handle
-	glDeleteTextures(1, &rightCamTex);
-	glGenTextures(1, &rightCamTex);
- 
-	// Bind to our texture handle
-	glBindTexture(GL_TEXTURE_2D, rightCamTex);
- 
-	// Set texture interpolation methods for minification and magnification
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-
-	// Set incoming texture format to:
-	// GL_BGR       for CV_CAP_OPENNI_BGR_IMAGE,
-	// GL_LUMINANCE for CV_CAP_OPENNI_DISPARITY_MAP,
-	// Work out other mappings as required ( there's a list in comments in main() )
-	if (left->channels() == 1)
-	{
-		inputColourFormat = GL_LUMINANCE;
-	}
- 
-	// Create the texture
-	glTexImage2D(GL_TEXTURE_2D,     // Type of texture
-	             0,                 // Pyramid level (for mip-mapping) - 0 is the top level
-	             GL_RGB,            // Internal colour format to convert to
-	             right->cols,          // Image width  i.e. 640 for Kinect in standard mode
-	             right->rows,          // Image height i.e. 480 for Kinect in standard mode
-	             0,                 // Border width in pixels (can either be 1 or 0)
-	             inputColourFormat, // Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
-	             GL_UNSIGNED_BYTE,  // Image data type
-	             right->ptr());        // The actual image data itself
-}
-
-
-
+/**
+Recursive method for rendering the scenegraph of a VirtualEntity.
+@param parent node to be processed
+@param transform accumulated transformation matrices from root to current recursion depth
+*/
 void Renderer::recursiveRendering(EntityNode *parent, mat4 transform){
 	
 	for(unsigned int i=0; i<parent->meshes.size(); i++){
@@ -423,6 +397,10 @@ void Renderer::recursiveRendering(EntityNode *parent, mat4 transform){
 	}
 }
 
+
+/**
+Helper method for phong rendering.
+*/
 void Renderer::phongPass(Mesh *m, mat4 transform){
 
 	phong.setUniform("modelMatrix", transform);
@@ -449,7 +427,9 @@ void Renderer::phongPass(Mesh *m, mat4 transform){
 }
 
 
-
+/**
+Creates a viewport filling quad for direct texture rendering.
+*/
 void Renderer::setupQuad(){
 		GLfloat positions[] = { 
 			-1.0f, -1.0f, 0.0f, 1.0f,
@@ -469,6 +449,10 @@ void Renderer::setupQuad(){
 		glVertexAttribPointer(vertexLoc, 4, GL_FLOAT, 0, 0, 0);
 }
 
+/**
+Renders a viewport filling quad with a texture.
+@param tex the texture that should be rendered
+*/
 void Renderer::renderTextureQuad(GLuint tex){
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, tex);

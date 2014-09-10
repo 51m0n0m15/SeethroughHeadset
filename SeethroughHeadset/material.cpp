@@ -1,6 +1,10 @@
 #include "material.h"
 #include <il.h>
 
+
+/**
+Extracts information from an assimp-material, loads textures.
+*/
 Material::Material(aiMaterial *material)
 {
 	aiColor3D color;
@@ -26,18 +30,14 @@ Material::Material(aiMaterial *material)
 		normalmapID = loadTexture(path.C_Str(),1);
 	} else 
 		normalmapID=0;
-
-	if(material->GetTextureCount(aiTextureType_LIGHTMAP)>0){    //store glowmap to ambient texture in maya, assimp puts it in lightmap. (??)
-		aiString path;
-		material->Get(AI_MATKEY_TEXTURE(aiTextureType_LIGHTMAP,0), path);
-		glowmapID = loadTexture(path.C_Str(),2);
-		//as it is impossible now to set the ambient color for this object in maya, we assign a default value
-		colorAmbient = vec3(0.5f,0.5f,0.5f);
-	} else 
-		glowmapID=0;
 }
 
 
+/**
+Creates an OpenGL texture of an image file using DevIL, returns the texture handle.
+@param fname path to the image file
+@param textureUnit the texture unit that should be used
+*/
 GLuint Material::loadTexture(const char* fName, int textureUnit)
 {
 	if (ilGetInteger(IL_VERSION_NUM) < IL_VERSION){
