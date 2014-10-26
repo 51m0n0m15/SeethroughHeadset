@@ -71,7 +71,7 @@ void Renderer::init(vector<VirtualEntity*> *entities){
 Compiles and links shader programs from files. Currently:\n
 - phong: a simple standard phong shader which is used to render virtual objects\n
 - drawTexture: can be used to draw a textures to the screen, in our case to draw the camera frames\n
-- warp: corrects distortion and chromatic abberation on the final image\n
+- warp: corrects distortion and chromatic aberration on the final image\n
 Shader compilation errors are written to the file "shader.log".\n
 other shaders can be added.
 */

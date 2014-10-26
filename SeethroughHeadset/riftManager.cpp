@@ -163,7 +163,7 @@ glm::vec4 RiftManager::getWarpParameters(){
 }
 
 /**
-Returns a set of parameters needed for chromatic abberation correction in shader.
+Returns a set of parameters needed for chromatic aberration correction in shader.
 */
 glm::vec4 RiftManager::getChromAbParameters(){
 	if(pHMD==NULL){

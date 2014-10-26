@@ -316,13 +316,13 @@ int main(int argc, char *argv[])
 	
 	windowHandle = glutCreateWindow("Seethrough Headset Demo");
 
-	/*
-	if(fullscreen){
+
+	if(Cfg::fullscreen){
 		glutFullScreen();
-		windowWidth = glutGet(GLUT_WINDOW_WIDTH);
-		windowHeight = glutGet(GLUT_WINDOW_HEIGHT);
+		//set display width and height depending on display
+		Cfg::displayW = glutGet(GLUT_WINDOW_WIDTH);
+		Cfg::displayH = glutGet(GLUT_WINDOW_HEIGHT);
 	}
-	*/
 
 	//set UI callback functions
 	glutDisplayFunc(renderScene);

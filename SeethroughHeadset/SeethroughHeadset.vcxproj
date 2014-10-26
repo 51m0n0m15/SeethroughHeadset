@@ -53,13 +53,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\_LIBRARIES\boost_1_55_0;$(ProjectDir)\..\..\_LIBRARIES\opencv\build\include;$(ProjectDir)\..\..\_LIBRARIES\opencv\build\include\opencv2;$(ProjectDir)external\DevIL-1.7.8\include\IL;$(ProjectDir)external\freeglut-2.8.1\include\GL;$(ProjectDir)external\glew-1.10.0\include\GL;$(ProjectDir)external\glm-0.9.4.6\glm;$(ProjectDir)external\assimp-3.0.1270\include;$(ProjectDir)\..\..\_LIBRARIES\OculusSDK\LibOVR\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\_LIBRARIES\boost_1_55_0;$(ProjectDir)\..\..\_LIBRARIES\opencv\build\include;$(ProjectDir)\..\..\_LIBRARIES\opencv\build\include\opencv2;$(ProjectDir)\..\..\_LIBRARIES\DevIL-1.7.8\include\IL;$(ProjectDir)\..\..\_LIBRARIES\freeglut-2.8.1\include\GL;$(ProjectDir)\..\..\_LIBRARIES\glew-1.10.0\include\GL;$(ProjectDir)\..\..\_LIBRARIES\glm-0.9.4.6\glm;$(ProjectDir)\..\..\_LIBRARIES\assimp-3.0.1270\include;$(ProjectDir)\..\..\_LIBRARIES\OculusSDK\LibOVR\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ProjectDir)\..\..\opencv\build\x86\vc11\lib;$(ProjectDir)external\DevIL-1.7.8\lib;$(ProjectDir)external\freeglut-2.8.1\lib;$(ProjectDir)external\glew-1.10.0\lib\Release\Win32;$(ProjectDir)external\assimp-3.0.1270\lib\assimp_release-dll_win32;$(ProjectDir)\..\..\OculusSDK\LibOVR\Lib\Win32</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opencv_core248d.lib;opencv_highgui248d.lib;DevIL.lib;ILU.lib;ILUT.lib;freeglut.lib;glew32.lib;glew32s.lib;assimp.lib;libovrd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)\..\..\_LIBRARIES\boost_1_55_0\lib32-msvc-11.0;$(ProjectDir)\..\..\_LIBRARIES\opencv\build\x86\vc11\lib;$(ProjectDir)\..\..\_LIBRARIES\DevIL-1.7.8\lib;$(ProjectDir)\..\..\_LIBRARIES\freeglut-2.8.1\lib;$(ProjectDir)\..\..\_LIBRARIES\glew-1.10.0\lib\Release\Win32;$(ProjectDir)\..\..\_LIBRARIES\assimp-3.0.1270\lib\assimp_release-dll_win32;$(ProjectDir)\..\..\_LIBRARIES\OculusSDK\LibOVR\Lib\Win32</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opencv_core248d.lib;opencv_highgui248d.lib;DevIL.lib;ILU.lib;ILUT.lib;freeglut.lib;glew32.lib;glew32s.lib;assimp.lib;libovrd.lib;boost_filesystem-vc110-mt-1_55.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -72,14 +72,14 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\_LIBRARIES\boost_1_55_0;$(ProjectDir)\..\..\_LIBRARIES\opencv\build\include;$(ProjectDir)\..\..\_LIBRARIES\opencv\build\include\opencv2;$(ProjectDir)external\DevIL-1.7.8\include\IL;$(ProjectDir)external\freeglut-2.8.1\include\GL;$(ProjectDir)external\glew-1.10.0\include\GL;$(ProjectDir)external\glm-0.9.4.6\glm;$(ProjectDir)external\assimp-3.0.1270\include;$(ProjectDir)\..\..\_LIBRARIES\OculusSDK\LibOVR\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\_LIBRARIES\boost_1_55_0;$(ProjectDir)\..\..\_LIBRARIES\opencv\build\include;$(ProjectDir)\..\..\_LIBRARIES\opencv\build\include\opencv2;$(ProjectDir)\..\..\_LIBRARIES\DevIL-1.7.8\include\IL;$(ProjectDir)\..\..\_LIBRARIES\freeglut-2.8.1\include\GL;$(ProjectDir)\..\..\_LIBRARIES\glew-1.10.0\include\GL;$(ProjectDir)\..\..\_LIBRARIES\glm-0.9.4.6\glm;$(ProjectDir)\..\..\_LIBRARIES\assimp-3.0.1270\include;$(ProjectDir)\..\..\_LIBRARIES\OculusSDK\LibOVR\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(ProjectDir)\..\..\_LIBRARIES\boost_1_55_0\lib32-msvc-11.0;$(ProjectDir)\..\..\_LIBRARIES\opencv\build\x86\vc11\lib;$(ProjectDir)\..\..\_LIBRARIES\OculusSDK\LibOVR\Lib\Win32;$(ProjectDir)external\DevIL-1.7.8\lib;$(ProjectDir)external\freeglut-2.8.1\lib;$(ProjectDir)external\glew-1.10.0\lib\Release\Win32;$(ProjectDir)external\assimp-3.0.1270\lib\assimp_release-dll_win32</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)\..\..\_LIBRARIES\boost_1_55_0\lib32-msvc-11.0;$(ProjectDir)\..\..\_LIBRARIES\opencv\build\x86\vc11\lib;$(ProjectDir)\..\..\_LIBRARIES\OculusSDK\LibOVR\Lib\Win32;$(ProjectDir)\..\..\_LIBRARIES\DevIL-1.7.8\lib;$(ProjectDir)\..\..\_LIBRARIES\freeglut-2.8.1\lib;$(ProjectDir)\..\..\_LIBRARIES\glew-1.10.0\lib\Release\Win32;$(ProjectDir)\..\..\_LIBRARIES\assimp-3.0.1270\lib\assimp_release-dll_win32</AdditionalLibraryDirectories>
       <AdditionalDependencies>opencv_core248.lib;opencv_highgui248.lib;DevIL.lib;ILU.lib;ILUT.lib;freeglut.lib;glew32.lib;glew32s.lib;assimp.lib;libovr.lib;boost_filesystem-vc110-mt-1_55.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

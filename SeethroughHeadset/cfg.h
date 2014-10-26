@@ -17,8 +17,9 @@ public:
 	static void load(char* path);
 
 	//display
-	static int displayW;			/**< width of the whole HMD (left+right eye)*/
-	static int displayH;			/**< height of the HMD */
+	static int displayW;			/**< width of the whole HMD (left+right eye). Value will be overwritten by actual display size if fullscreen is on.*/
+	static int displayH;			/**< height of the HMD  Value will be overwritten by actual display size if fullscreen is on.*/
+	static bool fullscreen;			/**< start application in fullscreen mode */
 
 	//models
 	static string modelPath;		/**< path to the folder that contains the models that should be loaded */

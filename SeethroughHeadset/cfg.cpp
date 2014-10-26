@@ -11,6 +11,7 @@ Cfg::~Cfg(void)
 
 int Cfg::displayW;
 int Cfg::displayH;
+bool Cfg::fullscreen;
 
 string Cfg::modelPath;
 string Cfg::modelFileExt;
@@ -37,7 +38,8 @@ If the specified ini file is not found, writes a message to the console and retu
 void Cfg::load(char *path){
 
 	if(!boost::filesystem::exists(path)){
-		cout << path << " not found." << endl;
+		cout << "ERROR: " << path << " not found." << endl;
+		throw;
 		return;
 	}
 
@@ -46,6 +48,7 @@ void Cfg::load(char *path){
 	
 	displayW = pt.get<int>("displayW", 1280);
 	displayH = pt.get<int>("displayH", 800);
+	fullscreen = pt.get<bool>("fullscreen", true);
 
 	modelPath = pt.get<string>("modelPath", "models");
 	modelFileExt = pt.get<string>("modelFileExt", ".dae");
